@@ -3,6 +3,8 @@ package se.haegers.tsbk;
 import java.util.HashMap;
 import java.util.Map;
 
+import se.haegers.tsbk.ehager.HeightMap;
+
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Buttons;
@@ -14,7 +16,6 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -217,8 +218,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	}
 
-	private void emilCreate() {
-
+	private void emilCreate() 
+	{
+		HeightMap tempMap = new HeightMap(1024,1024);
+		tempMap.saveImage("imatest.png");
 	}
 	
 	@Override
