@@ -1,9 +1,16 @@
 package se.haegers.tsbk;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
+
 import se.haegers.tsbk.ehager.HeightMap;
+import se.haegers.tsbk.ehager.NoiseMap;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -94,6 +101,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Tholin's variables
 	 */
+	@SuppressWarnings("unused")
 	private SkeletonRendererDebug debugRenderer;
 	private SkeletonRenderer skeletonRenderer;
 	private TextureAtlas atlas;
@@ -220,8 +228,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	private void emilCreate() 
 	{
-		HeightMap tempMap = new HeightMap(1024,1024);
-		tempMap.saveImage("imatest.png");
+		
 	}
 	
 	@Override
