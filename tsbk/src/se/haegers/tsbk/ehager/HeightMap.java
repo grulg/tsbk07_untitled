@@ -4,186 +4,159 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import edu.emory.mathcs.jtransforms.fft.DoubleFFT_2D;
-
 public class HeightMap 
 {
+	public HeightMap(int w, int h, NoiseMap ul, NoiseMap ur, NoiseMap lr, NoiseMap ll)
+	{
+		width = w; height = h;
+		realWidth = w-smoothRegion;
+		realHeight = h-smoothRegion;
+		heights = new double[realWidth][realHeight];
 
-	public HeightMap(int width, int height) 
-	{
-		this.width = width;
-		this.height = height;
+		this.ll = ll;
+		this.ur = ur;
+		this.lr = lr;
+		this.ul = ul;
 		
-		numberGenerator = new Random();		
-		noise = new double[width][2*height];
-		filter = new Filter(width, height);
-		inFrequencyDomain = true;
+		boolean xSmooth, ySmooth;
 		
-		generateNoise();
-		//filter.makeSquare(50,50, 100, 100, 1.0f, 0.3f);
-		filter.makeBrown();
-		applyFilter();
-		transform();
-		normalizeNoise();
-		//normalizeHeights();
-	}
-	
-	/**
-	 * Makes white noise in the frequency domain, and stores it in noise.
-	 */
-	private void generateNoise() 
-	{
-		DoubleFFT_2D tformer = new DoubleFFT_2D(height, width);
-		inFrequencyDomain = true;
-		for(int x=0; x < width; ++x) 
+		for(int x=0; x < width; ++x)
 		{
-			for(int y=0; y < 2*height; ++y) 
+			for(int y=0; y < height; ++y)
 			{
-				if(y < height)
-					noise[x][y] = numberGenerator.nextGaussian();
+				int rx=x, ry=y;
+				
+				if(x > width/2+smoothRegion)
+					rx -= smoothRegion;
+				if(y > height/2+smoothRegion)
+					ry -= smoothRegion;
+				
+				xSmooth = !(x < width/2-smoothRegion || x > width/2+smoothRegion);
+				ySmooth = !(y < height/2-smoothRegion || y > height/2+smoothRegion);
+				
+				//Outside the transitional region, just copy values.
+				if(!(xSmooth || ySmooth))
+				{
+					heights[rx][ry] = noiseFromMaps(x, y);
+				}
 				else
-					noise[x][y] = 0.0f;
+				{	
+					int xs, ys;
+					double xf, yf, val1, val2;
+					
+					if(xSmooth && ySmooth)
+					{
+						xs = (x-width/2)+smoothRegion;
+						ys = (y-height/2)+smoothRegion;
+						xf = (double)xs/smoothRegion;
+						yf = (double)ys/smoothRegion;
+						
+						val1 = (1-xf)*noiseFromMaps(x,y)+xf*noiseFromMaps(x+smoothRegion, y);
+						val2 = (1-xf)*noiseFromMaps(x,y+smoothRegion)+xf*noiseFromMaps(x+smoothRegion, y+smoothRegion);
+						
+						heights[rx][ry] = (1-yf)*val1+yf*val2;
+					}
+					else if(xSmooth)
+					{
+						xs = (x-width/2)+smoothRegion;
+						xf = (double)xs/smoothRegion;
+						heights[rx][ry] = (1-xf)*noiseFromMaps(x,y)+xf*noiseFromMaps(x+smoothRegion, y);
+					}
+					else if(ySmooth)
+					{
+						ys = (y-height/2)+smoothRegion;
+						yf = (double)ys/smoothRegion;
+						heights[rx][ry] = (1-yf)*noiseFromMaps(x,y)+yf*noiseFromMaps(x, y+smoothRegion);
+					}
+				}
 			}
 		}
-		tformer.realForwardFull(noise);
 	}
 	
-	
-	/**
-	 * Frequency domain filtering: multiply noise with filter.
-	 */
-	private void applyFilter()
+	private void normalize()
 	{
-		for(int x=0; x < width; ++x)
+		double max=0.0f, min = 1.0f;
+		
+		for(int x=0; x < realWidth; ++x)
 		{
-			for(int y=0; y < height; ++y)
+			for(int y=0; y < realHeight; ++y)
 			{
-				noise[x][y] *= filter.getBin(x, y);
-				noise[x][y+height] *= filter.getBin(x, y);
-			}
-		}
-	}
-	
-	/**
-	 * Run post-transform. Normalizes heightmap values
-	 * to be in the range [0, 1].
-	 */
-	private void normalizeHeights()
-	{
-		double max=0, min=1;
-		for(int x=0; x < width; ++x)
-		{
-			for(int y=0; y < height; ++y)
-			{
-				double h = heights[x][y];
-				if(h > max)
-					max = h;
-				if(h < min)
-					min = h;
+				if(heights[x][y] > max)
+					max = heights[x][y];
+				if(heights[x][y] < min)
+					min = heights[x][y];
 			}
 		}
 		max = max-min;
-		System.out.printf("HMax: %f,  Min: %f", max, min);
-		for(int x=0; x < width; ++x)
+		for(int x=0; x < realWidth; ++x)
 		{
-			for(int y=0; y < height; ++y)
+			for(int y=0; y < realHeight; ++y)
 			{
-				heights[x][y] = (float) ((heights[x][y]-min)/max);
+				heights[x][y] = (heights[x][y]-min)/max;
 			}
 		}
 	}
 	
-	private void normalizeNoise()
+	private double noiseFromMaps(int x, int y)
 	{
-		double max=0, min=1;
-		for(int x=0; x < width; ++x)
+		double tmp;
+		try
 		{
-			for(int y=0; y < 2*height; ++y)
+			if(x < width/2)
 			{
-				double h = noise[x][y];
-				if(h > max)
-					max = h;
-				if(h < min)
-					min = h;
+				if(y < height/2)
+				{
+					tmp = ul.getNoise(x+width/2, y+height/2);
+				}
+				else
+				{
+					tmp = ll.getNoise(x+width/2, y-height/2);
+				}
+			}
+			else
+			{
+				if(y < height/2)
+				{
+					tmp = ur.getNoise(x-width/2, y+height/2);
+				}
+				else
+				{
+					tmp = lr.getNoise(x-width/2, y-height/2);
+				}
 			}
 		}
-		max = max-min;
-		System.out.printf("NMax: %f,  Min: %f", max, min);
-		for(int x=0; x < width; ++x)
+		//TODO Ugly workaround -> fix.
+		catch(Exception e)
 		{
-			for(int y=0; y < 2*height; ++y)
-			{
-				noise[x][y] = (float) ((noise[x][y]-min)/max);
-			}
+			tmp = 1.0f;
 		}
+		
+		return tmp;
 	}
 	
-	/**
-	 * Executes FFT to create a proper heightmap.
-	 */
-	private void transform()
+	public double getHeight(int x, int y)
 	{
-		DoubleFFT_2D tformer = new DoubleFFT_2D(height, width);
-		tformer.realInverseFull(noise, true);
-		inFrequencyDomain = false;
-		
-		heights = new double[width][height];
-		
-		for(int x=0; x < width; ++x)
-		{
-			for(int y=0; y < height; ++y)
-			{
-				heights[x][y] = (float) Math.sqrt(
-						noise[x][y]*noise[x][y]+noise[x][y+height]*noise[x][y+height]);
-			}
-		}
-	}
-	
-	/**
-	 * Returns the interpolated height at requested coordinates.
-	 * Only works in the positive quadrant. Returns 0.0f in case of error
-	 * (bad coordinates or noise in frequency domain)
-	 * 
-	 * @param x X-coordinate. Must be nonnegative!
-	 * @param y Y-coordinate. Must be nonnegative!
-	 * @return Height at requested coordinates or 0.0 if an error occurs.
-	 */
-	public double getHeight(double x, double y)
-	{
-		if(inFrequencyDomain)
-			return 0.0f;
-		
-		int ix = (int) Math.floor(x);
-		int iy = (int) Math.floor(y);
-		
-		double ul = heights[ix][iy];
-		double ur = heights[ix+1][iy];
-		double ll = heights[ix][iy+1];
-		double lr = heights[ix+1][iy+1];
-		
-		double x1 = ((ix+1)-x)*ul + (x-ix)*ur;
-		double x2 = ((ix+1)-x)*ll + (x-ix)*lr;
-		
-		return ((iy+1)-y)*x1 + (y-ix)*x2;
+		return heights[x][y];
 	}
 	
 	public void saveImage(String path)
 	{
-		BufferedImage pic = new BufferedImage(width, height, 
+		normalize();
+		
+		BufferedImage pic = new BufferedImage(realWidth, realHeight, 
 								BufferedImage.TYPE_INT_RGB);
 		
-		for(int x=0; x < width; ++x)
+		for(int x=0; x < realWidth; ++x)
 		{
-			for(int y=0; y < height; ++y)
+			for(int y=0; y < realHeight; ++y)
 			{
 				pic.setRGB(x, y, 
-						new Color((float) noise[x][y], 
-								(float) noise[x][y],
-								(float) noise[x][y]).getRGB());
+						new Color((float) heights[x][y], 
+								(float) heights[x][y],
+								(float) heights[x][y]).getRGB());
 			}
 		}
 		File ofile = new File(path);
@@ -197,10 +170,8 @@ public class HeightMap
 		}
 	}
 	
-	private double[][] noise;
+	private NoiseMap ul, ur, lr, ll;
+	private int width, height, realWidth, realHeight;
+	private final int smoothRegion = 16;
 	private double[][] heights;
-	private Filter filter;
-	private int width, height;
-	private boolean inFrequencyDomain;
-	private Random numberGenerator;
 }
