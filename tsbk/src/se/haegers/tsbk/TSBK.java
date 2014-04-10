@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 
 import se.haegers.tsbk.ehager.HeightMap;
 import se.haegers.tsbk.ehager.NoiseMap;
+import se.haegers.tsbk.model.Skydome;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -113,7 +114,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Haeger's variables
 	 */
-	
+	private Skydome skydome;
 
 	/*
 	 * Emil's variables
@@ -159,12 +160,13 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		sprite.setOrigin(sprite.getWidth()/2, sprite.getHeight()/2);
 		sprite.setPosition(-sprite.getWidth()/2, -sprite.getHeight()/2);
 		
+		
+		ShaderProgram.pedantic = false; // Uniforms and attributes doesn't have to be present at all times => more efficient.
 		/*
 		 * The shader program contructor takes the path to the shaders on disk (starts at Android project, assets folder)
 		 * Makes a log entry whether the compilation was successful or not.
 		 */
 		makeRedShader = new ShaderProgram(Gdx.files.internal("shaders/makeRed.vsh"), Gdx.files.internal("shaders/makeRed.fsh"));
-		ShaderProgram.pedantic = false; // Uniforms and attributes doesn't have to be present at all times => more efficient.
 		Gdx.app.log("makeRed", makeRedShader.isCompiled() ? "makeRed compiled successfully" : makeRedShader.getLog());
 		
 		/*
@@ -223,7 +225,24 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	}
 
 	private void haegerCreate() {
-
+		
+		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
+				Gdx.files.internal("shaders/skydomeFrag.glsl"));
+		Gdx.app.log("skydome", shader.isCompiled() ? "skydome compiled successfully" : shader.getLog());
+		
+		this.skydome = new Skydome(
+				8,
+				55f,
+				1024*12f,
+				1.0f,
+				new Vector3(0, 0, -512 * 10),
+				new Vector3(1.0f, 1.0f, 1.0f),
+				new Vector3(0.4f, 0.4f, 0.4f),
+				new Vector3(0.25f, 0.31f, 0.63f),
+				new Vector3(0.1f, 0.1f, 0.11f),
+				shader
+		);
+		
 	}
 
 	private void emilCreate() 
@@ -272,7 +291,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		 * Just expand our own draw for now, so we won't have an issue with merging later.
 		 */
 		tholinDraw();
-		haegerDraw();
+		haegerDraw(camera.combined);
 		emilDraw();
 
 		/*
@@ -309,8 +328,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
     	batch.end();	
 	}
 
-	private void haegerDraw() {
-
+	private void haegerDraw(Matrix4 cameraMatrix) {
+		skydome.render(cameraMatrix);
 	}
 
 	private void emilDraw() {
