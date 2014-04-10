@@ -231,15 +231,15 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		Gdx.app.log("skydome", shader.isCompiled() ? "skydome compiled successfully" : shader.getLog());
 		
 		this.skydome = new Skydome(
-				8,
-				55f,
-				1024*12f,
-				1.0f,
-				new Vector3(0, 0, -512 * 10),
-				new Vector3(1.0f, 1.0f, 1.0f),
-				new Vector3(0.4f, 0.4f, 0.4f),
-				new Vector3(0.25f, 0.31f, 0.63f),
-				new Vector3(0.1f, 0.1f, 0.11f),
+				8,									// Resolution
+				55f,								// Vertical Sweep (degrees)
+				1024*12f,							// Radius
+				1.0f,								// Height Scale
+				new Vector3(0, 0, -512 * 10),		// Origin
+				new Vector3(1.0f, 1.0f, 1.0f),		// Base day light ambient color
+				new Vector3(0.4f, 0.4f, 0.4f),		// Base Night light ambient color
+				new Vector3(0.25f, 0.31f, 0.63f),	// Base day sky color
+				new Vector3(0.1f, 0.1f, 0.11f),		// Base night sky color
 				shader
 		);
 		
