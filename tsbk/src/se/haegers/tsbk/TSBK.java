@@ -1,7 +1,16 @@
 package se.haegers.tsbk;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
+
+import se.haegers.tsbk.ehager.HeightMap;
+import se.haegers.tsbk.ehager.NoiseMap;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -14,7 +23,6 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -93,6 +101,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Tholin's variables
 	 */
+	@SuppressWarnings("unused")
 	private SkeletonRendererDebug debugRenderer;
 	private SkeletonRenderer skeletonRenderer;
 	private TextureAtlas atlas;
@@ -217,8 +226,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	}
 
-	private void emilCreate() {
-
+	private void emilCreate() 
+	{
+		
 	}
 	
 	@Override
