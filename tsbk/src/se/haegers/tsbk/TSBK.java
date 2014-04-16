@@ -88,7 +88,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		CAM_LEFT, 
 		CAM_RIGHT, 
 		CAM_UP, 
-		CAM_DOWN
+		CAM_DOWN,
+		CAM_FORWARD
 	}
 	
 	static Map<Move_Buttons, Boolean> buttons = new HashMap<Move_Buttons, Boolean>();
@@ -97,6 +98,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		buttons.put(Move_Buttons.CAM_RIGHT, false);
 		buttons.put(Move_Buttons.CAM_UP, false);
 		buttons.put(Move_Buttons.CAM_DOWN, false);
+		buttons.put(Move_Buttons.CAM_FORWARD, false);
 	}; 
 	
 	/*
@@ -226,16 +228,18 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	private void haegerCreate() {
 		
-		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
-				Gdx.files.internal("shaders/skydomeFrag.glsl"));
+//		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
+//				Gdx.files.internal("shaders/skydomeFrag.glsl"));
+		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/wireframeSkydomeVert.glsl"), 
+				Gdx.files.internal("shaders/wireframeSkydomeFrag.glsl"));
 		Gdx.app.log("skydome", shader.isCompiled() ? "skydome compiled successfully" : shader.getLog());
 		
 		this.skydome = new Skydome(
 				8,									// Resolution
 				55f,								// Vertical Sweep (degrees)
-				1024*12f,							// Radius
+				25f,								// Radius
 				1.0f,								// Height Scale
-				new Vector3(0, 0, -512 * 10),		// Origin
+				new Vector3(0, 0, -512 * 10),		// Offset
 				new Vector3(1.0f, 1.0f, 1.0f),		// Base day light ambient color
 				new Vector3(0.4f, 0.4f, 0.4f),		// Base Night light ambient color
 				new Vector3(0.25f, 0.31f, 0.63f),	// Base day sky color
@@ -360,6 +364,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 			camera.translate(camera.up.cpy().nor().scl(-CAMERA_MOVEMENT_SPEED));
 			camera.update();
 		}
+		if (buttons.get(Move_Buttons.CAM_FORWARD)) {
+			camera.translate(camera.direction.cpy().nor().scl(ZOOM_SPEED));
+			camera.update();
+		}
 		if(leftPressed) {
 			int x = Gdx.input.getX();
 			int y = Gdx.input.getY();
@@ -425,6 +433,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if(keycode == Keys.S) {
 			buttons.get(buttons.put(Move_Buttons.CAM_DOWN, true));
 		}
+		if(keycode == Keys.F) {
+			buttons.get(buttons.put(Move_Buttons.CAM_FORWARD, true));
+		}
 		return false;
 	}
 
@@ -441,6 +452,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		}
 		if(keycode == Keys.S) {
 			buttons.get(buttons.put(Move_Buttons.CAM_DOWN, false));
+		}
+		if(keycode == Keys.F) {
+			buttons.get(buttons.put(Move_Buttons.CAM_FORWARD, false));
 		}
 		
 		return false;

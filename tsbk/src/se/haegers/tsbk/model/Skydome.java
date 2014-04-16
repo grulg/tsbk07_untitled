@@ -64,9 +64,7 @@ public class Skydome implements Model {
 		
 		// Calculate number of vertices and prepare the mesh
 		int numberOfVertices = 1 + 4 * resolution * resolution;
-		this.mesh = new Mesh(true, numberOfVertices, 0, new VertexAttribute(Usage.Position, 3, "a_position"), 
-				new VertexAttribute(Usage.TextureCoordinates, 2, "a_texCoord0"), 
-				new VertexAttribute(Usage.Normal, 3, "a_normal"));
+		this.mesh = new Mesh(true, numberOfVertices, 0, new VertexAttribute(Usage.Position, 3, "a_position"));
 		
 		// Adjust the radius based on the vertical sweep
 		double radAngle = (90 - verticalSweep) / 180 * Math.PI;
@@ -125,6 +123,19 @@ public class Skydome implements Model {
 		}
 		
 		mesh.setVertices(vertices);
+		
+		float[] v = new float[mesh.getNumVertices()];
+		mesh.getVertices(v);
+		System.out.println(mesh.getNumVertices());
+		for(int i = 0; i < v.length; i += 3) {
+			
+			System.out.print(v[i]);
+			
+			if(i % 3 == 0)
+				System.out.println();
+			else
+				System.out.print(", ");
+		}
 	}
 
 	@Override
@@ -143,7 +154,7 @@ public class Skydome implements Model {
 		
 		shader.begin();
 		shader.setUniformMatrix("u_combinedMat", cameraMatrix);
-		mesh.render(shader, GL20.GL_TRIANGLE_FAN);
+		mesh.render(shader, GL20.GL_LINES);
 		shader.end();
 		
 		gl.glDisable(GL20.GL_BLEND);
