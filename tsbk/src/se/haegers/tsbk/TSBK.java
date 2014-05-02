@@ -236,10 +236,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		
 		this.skydome = new Skydome(
 				8,									// Resolution
-				55f,								// Vertical Sweep (degrees)
+				70f,								// Vertical Sweep (degrees)
 				25f,								// Radius
 				1.0f,								// Height Scale
-				new Vector3(0, 0, -512 * 10),		// Offset
+				new Vector3(0, 0, 0),				// Offset
 				new Vector3(1.0f, 1.0f, 1.0f),		// Base day light ambient color
 				new Vector3(0.4f, 0.4f, 0.4f),		// Base Night light ambient color
 				new Vector3(0.25f, 0.31f, 0.63f),	// Base day sky color

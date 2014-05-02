@@ -85,7 +85,7 @@ public class Skydome implements Model {
 		// Start the array with the vertex at the top of the dome
 		vertices[0] = origin.x;
 		vertices[1] = origin.y;
-		vertices[2] = ((radius + zAdjust) * heightScale) + origin.y;			// TODO You are here. Z and Y are swapped.
+		vertices[2] = ((radius + zAdjust) * heightScale) + origin.z;
 		
 		
 		int currentVertexIndex = 3;
@@ -131,7 +131,7 @@ public class Skydome implements Model {
 			
 			System.out.print(v[i]);
 			
-			if((i > 0) && (i % 3) == 0)
+			if((i > 0) && ((i % 3) == 0))
 				System.out.println();
 			else
 				System.out.print(", ");
@@ -152,7 +152,7 @@ public class Skydome implements Model {
 		
 		shader.begin();
 		shader.setUniformMatrix("u_combinedMat", cameraMatrix);
-		mesh.render(shader, GL20.GL_TRIANGLE_FAN);
+		mesh.render(shader, GL20.GL_LINES);
 		shader.end();
 		
 		gl.glDisable(GL20.GL_BLEND);
