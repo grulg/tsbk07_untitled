@@ -1,8 +1,9 @@
 package se.haegers.tsbk.model;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
@@ -13,10 +14,20 @@ import com.badlogic.gdx.math.Vector3;
 
 public class Skydome implements Model {
 	
+	/**
+	 * Number of segments in a 90 degree slice horizontally and vertically.
+	 */
 	private int resolution;
 	
+	
+	/**
+	 * The range which is to be included in the dome. >0 and <= 90.
+	 */
 	private float verticalSweep;
 	
+	/**
+	 * Radius at the base of the dome.
+	 */
 	private float radius;
 	
 	private float heightScale;
@@ -70,8 +81,8 @@ public class Skydome implements Model {
 		double radAngle = (90 - verticalSweep) / 180 * Math.PI;
 		radius /= Math.cos(radAngle);
 		
-		// Compute the z adjustment (amount of which the radius is reduced at top?)
-		float zAdjust = (float) (radius * Math.sin(radAngle));
+		// Compute the y adjustment
+		float yAdjust = (float) (radius * Math.sin(radAngle));
 		
 		// Calculate the horizontal sweep of one section of the dome
 		// based on the resolution 
@@ -80,62 +91,71 @@ public class Skydome implements Model {
 		// Adjust with the given resolution
 		this.verticalSweep /= resolution;
 		
-		float[] vertices = new float[numberOfVertices];
+		ArrayList<Float> vertices = new ArrayList<Float>();
 		
 		// Start the array with the vertex at the top of the dome
-		vertices[0] = origin.x;
-		vertices[1] = origin.y;
-		vertices[2] = ((radius + zAdjust) * heightScale) + origin.z;
+		vertices.add(origin.x);
+		vertices.add(((radius - yAdjust) * heightScale) + origin.y);
+		vertices.add(origin.z);
 		
-		
-		int currentVertexIndex = 3;
 		for (int i = 0; i < resolution; i++) {
 			
 			// Compute the vertex that will be rotated around to make a ring
 			
-			// Place the vertex at the outer rim on the base
-			Vector3 vertex = new Vector3(0, 0, radius);
+			// Place the vertex at the top
+			Vector3 vertex = new Vector3(0, radius, 0);
 			Matrix3 m = new Matrix3();
 			
-			// Rotate the vertex "up", revolving around the X-axis
+			// Rotate the vertex "down" from the top, revolving around the X-axis
 			m.setToRotation(Vector3.X, verticalSweep * (i + 1));
 			vertex.mul(m);
 //			assert vertex.z > (zAdjust - ON_EPSILON)
-			vertex.z = (vertex.z - zAdjust) * heightScale;
+			vertex.y = (vertex.y - yAdjust) * heightScale;
 			
 			
 			Vector3 tmp;
 			for (int j = 0; j < resolution; j++) {
 				
 				// Loop through the ring
-				
-				m.setToRotation(Vector3.Z, horizontalSweep * j);
+				Matrix3 n = new Matrix3();
+				n.setToRotation(Vector3.Y, horizontalSweep * j);
 				tmp = new Vector3(vertex);
-				tmp.mul(m);
+				tmp.mul(n);
 				tmp.add(origin);
 				
-				vertices[currentVertexIndex] = tmp.x;
-				vertices[currentVertexIndex + 1] = tmp.y;
-				vertices[currentVertexIndex + 2] = tmp.z;
-				
-				currentVertexIndex += 3;
+				vertices.add(tmp.x);
+				vertices.add(tmp.y);
+				vertices.add(tmp.z);
 			}
 		}
 		
-		mesh.setVertices(vertices);
+		float[] v = toFloatArray(vertices);
+		mesh.setVertices(v);
 		
-		float[] v = new float[mesh.getNumVertices()];
-		mesh.getVertices(v);
-		System.out.println(mesh.getNumVertices());
+//		float[] v = new float[mesh.getNumVertices()];
+//		mesh.getVertices(v);
+//		System.out.println("N.o. vertices: " + mesh.getNumVertices());
+		System.out.println("V.length = " + v.length);
 		for(int i = 0; i < v.length; ++i) {
 			
-			System.out.print(v[i]);
+			System.out.print(String.format("%.5g", v[i]));
 			
-			if((i > 0) && ((i % 3) == 0))
+			if((i > 0) && ((i % 3) == 2))
 				System.out.println();
 			else
 				System.out.print(", ");
 		}
+	}
+
+	private float[] toFloatArray(ArrayList<Float> vertices) {
+		
+		float[] a = new float[vertices.size()];
+		
+		for(int i = 0; i < vertices.size(); ++i) {
+			a[i] = vertices.get(i);
+		}
+		
+		return a;
 	}
 
 	@Override
