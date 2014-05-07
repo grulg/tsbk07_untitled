@@ -1,22 +1,21 @@
 package se.haegers.tsbk;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
-
+import se.haegers.tsbk.ehager.EdgeVertex;
 import se.haegers.tsbk.ehager.HeightMap;
+import se.haegers.tsbk.ehager.MarchableCube;
+import se.haegers.tsbk.ehager.MarchedField;
 import se.haegers.tsbk.ehager.NoiseMap;
+import se.haegers.tsbk.ehager.TerrainPoint;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -29,7 +28,16 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.spine.AnimationState;
@@ -49,6 +57,7 @@ import com.esotericsoftware.spine.SkeletonRendererDebug;
  * @author Emil
  *
  */
+@SuppressWarnings("unused")
 public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Constants used for navigation. Change them to suit your needs!
@@ -101,7 +110,6 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Tholin's variables
 	 */
-	@SuppressWarnings("unused")
 	private SkeletonRendererDebug debugRenderer;
 	private SkeletonRenderer skeletonRenderer;
 	private TextureAtlas atlas;
@@ -118,7 +126,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Emil's variables
 	 */
-	
+	ShapeRenderer sRend;
+	Mesh cubeMesh;
+	ShaderProgram sTest;
+	MarchedField tField;
 	
 	@Override
 	public void create() {
@@ -136,9 +147,16 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		 * here for example.
 		 */
 		camera = new PerspectiveCamera(67, w, h);
+		camera.near = 0.1f;
+		camera.far = 100.0f;
 		camera.translate(new Vector3(0,0,2));
+		camera.lookAt(0.0f, 0.0f, 0.0f);
 		camera.update();
 		batch = new SpriteBatch();
+		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+		
+		//Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+		//Gdx.gl.glCullFace(GL20.GL_BACK);
 		
 		/*
 		 * The texture constructor wants a path to the actual image, which starts in the assets folder
@@ -227,8 +245,31 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	}
 
 	private void emilCreate() 
-	{
+	{	
 		
+		sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
+		Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
+		
+		NoiseMap[] noises = new NoiseMap[]
+				{
+					new NoiseMap(128, 128, 100, 100),
+					new NoiseMap(128, 128, 101, 100),
+					new NoiseMap(128, 128, 100, 101),
+					new NoiseMap(128, 128, 101, 101)
+				};
+		
+		for(int q=0; q < 4; ++q)
+			noises[q].filterNoise();
+		
+		HeightMap h = new HeightMap(128, 128, noises[0], noises[1], noises[2], noises[3]);
+		
+		h.saveImage("current.png");
+		
+		tField = new MarchedField(h);
+		sRend = new ShapeRenderer();
+		System.out.printf("Starting meshification.\n");
+		cubeMesh = tField.getSolidMesh();
+		System.out.printf("Meshificaion complete.\n");
 	}
 	
 	@Override
@@ -236,6 +277,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		batch.dispose();
 		texture.dispose();
 		makeRedShader.dispose();
+		sTest.dispose();
+		sRend.dispose();
 		
 		atlas.dispose();
 	}
@@ -246,7 +289,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		 * Clear the screen to black. Looks friggin' delicious, like the C-labs.
 		 */
 		Gdx.gl.glClearColor(0, 0, 0, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		
 		updateCamera();
 		
@@ -313,8 +356,48 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	}
 
-	private void emilDraw() {
-
+	private void emilDraw() 
+	{
+		/*
+		sRend.setProjectionMatrix(camera.combined);
+		sRend.begin(ShapeType.Line);
+		sRend.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+		tField.renderNormals(sRend);
+		sRend.end();
+		/*
+		sRend.begin(ShapeType.Point);
+		tField.renderPoints(sRend);
+		sRend.end();
+		*/
+		
+		Vector3 tar = camera.position.cpy().mulAdd(camera.direction, 2);
+		
+		tField.activatePointsCloseTo(tar.x, tar.y, tar.z, 5);
+		
+		sRend.setProjectionMatrix(camera.combined);
+		sRend.begin(ShapeType.Point);
+		TerrainPoint[] ts = tField.getActivePoints();
+		for(int q=0; q < ts.length; ++q)
+		{
+			if(ts[q] == null)
+			{
+				continue;
+			}
+			switch(ts[q].getProperty())
+			{
+			case 0: sRend.setColor(Color.GREEN); break;
+			case 1: sRend.setColor(Color.RED); break;
+			case 2: sRend.setColor(Color.BLUE); break;
+			default: sRend.setColor(Color.CYAN);
+			}
+			sRend.point(ts[q].getX(), ts[q].getY(), ts[q].getZ());
+		}
+		sRend.end();
+		
+		sTest.begin();
+		sTest.setUniformMatrix("u_projection", camera.combined);
+		cubeMesh.render(sTest, GL20.GL_TRIANGLES);
+		sTest.end();
 	}
 	
     public void updateCamera() {
@@ -366,11 +449,11 @@ public class TSBK implements ApplicationListener, InputProcessor {
 			 * as rotation point as before.
 			 */
 			if(deltaY > 0) {
-				camera.rotateAround(camera.position, camera.up.cpy().crs(camera.position).nor(), CAMERA_ROTATE_SPEED);
+				camera.rotateAround(camera.position, camera.up.cpy().crs(camera.direction).nor(), CAMERA_ROTATE_SPEED);
 				camera.update(); 
 			}
 			else if(deltaY < 0) {
-				camera.rotateAround(camera.position, camera.up.cpy().crs(camera.position).nor(), -CAMERA_ROTATE_SPEED);
+				camera.rotateAround(camera.position, camera.up.cpy().crs(camera.direction).nor(), -CAMERA_ROTATE_SPEED);
 				camera.update(); 
 			}
 			
