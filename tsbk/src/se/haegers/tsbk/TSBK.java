@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 
 import se.haegers.tsbk.ehager.HeightMap;
 import se.haegers.tsbk.ehager.NoiseMap;
+import se.haegers.tsbk.model.MSkydome;
 import se.haegers.tsbk.model.Skydome;
 
 import com.badlogic.gdx.ApplicationListener;
@@ -18,6 +19,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -117,6 +119,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	 * Haeger's variables
 	 */
 	private Skydome skydome;
+	private MSkydome mSkydome;
 
 	/*
 	 * Emil's variables
@@ -235,7 +238,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		Gdx.app.log("skydome", shader.isCompiled() ? "skydome compiled successfully" : shader.getLog());
 		
 		this.skydome = new Skydome(
-				8,									// Resolution
+				100,									// Resolution
 				55f,								// Vertical Sweep (degrees)
 				50,								// Radius
 				1.0f,								// Height Scale
@@ -246,6 +249,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 				new Vector3(0.1f, 0.1f, 0.11f),		// Base night sky color
 				shader
 		);
+		
+		this.mSkydome = new MSkydome(shader);
+		this.mSkydome.create();
 		
 	}
 
@@ -295,7 +301,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		 * Just expand our own draw for now, so we won't have an issue with merging later.
 		 */
 		tholinDraw();
-		haegerDraw(camera.combined);
+		haegerDraw(camera);
 		emilDraw();
 
 		/*
@@ -332,8 +338,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
     	batch.end();	
 	}
 
-	private void haegerDraw(Matrix4 cameraMatrix) {
-		skydome.render(cameraMatrix);
+	private void haegerDraw(Camera camera) {
+		mSkydome.render(camera);
 	}
 
 	private void emilDraw() {

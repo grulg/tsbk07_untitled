@@ -3,6 +3,7 @@ package se.haegers.tsbk.model;
 import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
@@ -12,7 +13,8 @@ import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 
-public class Skydome implements Model {
+public class Skydome implements ModelInterface {
+	
 	
 	/**
 	 * Number of segments in a 90 degree slice horizontally and vertically.
@@ -86,7 +88,7 @@ public class Skydome implements Model {
 		
 		// Calculate the horizontal sweep of one section of the dome
 		// based on the resolution 
-		float horizontalSweep = 90f / resolution;
+		float horizontalSweep = 360f / resolution;
 		
 		// Adjust with the given resolution
 		this.verticalSweep /= resolution;
@@ -104,7 +106,7 @@ public class Skydome implements Model {
 			
 			// Place the vertex at the top
 			Vector3 vertex = new Vector3(0, radius, 0);
-			Matrix3 m = new Matrix3();
+			Matrix4 m = new Matrix4();
 			
 			// Rotate the vertex "down" from the top, revolving around the X-axis
 			m.setToRotation(Vector3.X, verticalSweep * (i + 1));
@@ -117,7 +119,7 @@ public class Skydome implements Model {
 			for (int j = 0; j < resolution; j++) {
 				
 				// Loop through the ring
-				Matrix3 n = new Matrix3();
+				Matrix4 n = new Matrix4();
 				n.setToRotation(Vector3.Y, horizontalSweep * j);
 				tmp = new Vector3(vertex);
 				tmp.mul(n);
@@ -134,17 +136,18 @@ public class Skydome implements Model {
 		
 //		float[] v = new float[mesh.getNumVertices()];
 //		mesh.getVertices(v);
-//		System.out.println("N.o. vertices: " + mesh.getNumVertices());
-		System.out.println("V.length = " + v.length);
-		for(int i = 0; i < v.length; ++i) {
-			
-			System.out.print(String.format("%.5g", v[i]));
-			
-			if((i > 0) && ((i % 3) == 2))
-				System.out.println();
-			else
-				System.out.print(", ");
-		}
+		System.out.println("Calculated vertices: " + numberOfVertices);
+		System.out.println("Mesh vertices: " + mesh.getNumVertices());
+		System.out.println("V.length / 3 = " + v.length / 3);
+//		for(int i = 0; i < v.length; ++i) {
+//			
+//			System.out.print(String.format("%.5g", v[i]));
+//			
+//			if((i > 0) && ((i % 3) == 2))
+//				System.out.println();
+//			else
+//				System.out.print(", ");
+//		}
 	}
 
 	private float[] toFloatArray(ArrayList<Float> vertices) {
@@ -159,13 +162,14 @@ public class Skydome implements Model {
 	}
 
 	@Override
-	public void load() {
+	public void create() {
 		
 	}
 
 	@Override
-	public void render(Matrix4 cameraMatrix) {
+	public void render(Camera camera) {
 		GL20 gl = Gdx.gl20;
+		Matrix4 cameraMatrix = camera.combined;
 		
 		gl.glEnable(GL20.GL_BLEND);
 		gl.glDepthMask(false);
