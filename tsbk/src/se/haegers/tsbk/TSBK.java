@@ -91,7 +91,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		CAM_RIGHT, 
 		CAM_UP, 
 		CAM_DOWN,
-		CAM_FORWARD
+		CAM_FORWARD, 
+		CAM_BACKWARD
 	}
 	
 	static Map<Move_Buttons, Boolean> buttons = new HashMap<Move_Buttons, Boolean>();
@@ -101,6 +102,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		buttons.put(Move_Buttons.CAM_UP, false);
 		buttons.put(Move_Buttons.CAM_DOWN, false);
 		buttons.put(Move_Buttons.CAM_FORWARD, false);
+		buttons.put(Move_Buttons.CAM_BACKWARD, false);
 	}; 
 	
 	/*
@@ -231,10 +233,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	private void haegerCreate() {
 		
-//		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
-//				Gdx.files.internal("shaders/skydomeFrag.glsl"));
-		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/wireframeSkydomeVert.glsl"), 
-				Gdx.files.internal("shaders/wireframeSkydomeFrag.glsl"));
+		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
+				Gdx.files.internal("shaders/skydomeFrag.glsl"));
+//		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/wireframeSkydomeVert.glsl"), 
+//				Gdx.files.internal("shaders/wireframeSkydomeFrag.glsl"));
 		Gdx.app.log("skydome", shader.isCompiled() ? "skydome compiled successfully" : shader.getLog());
 		
 		this.skydome = new Skydome(
@@ -374,6 +376,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 			camera.translate(camera.direction.cpy().nor().scl(ZOOM_SPEED));
 			camera.update();
 		}
+		if (buttons.get(Move_Buttons.CAM_BACKWARD)) {
+			camera.translate(camera.direction.cpy().nor().scl(-ZOOM_SPEED));
+			camera.update();
+		}
 		if(leftPressed) {
 			int x = Gdx.input.getX();
 			int y = Gdx.input.getY();
@@ -442,6 +448,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if(keycode == Keys.F) {
 			buttons.get(buttons.put(Move_Buttons.CAM_FORWARD, true));
 		}
+		if(keycode == Keys.C) {
+			buttons.get(buttons.put(Move_Buttons.CAM_BACKWARD, true));
+		}
 		return false;
 	}
 
@@ -462,7 +471,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if(keycode == Keys.F) {
 			buttons.get(buttons.put(Move_Buttons.CAM_FORWARD, false));
 		}
-		
+		if(keycode == Keys.C) {
+			buttons.get(buttons.put(Move_Buttons.CAM_BACKWARD, false));
+		}
 		return false;
 	}
 
