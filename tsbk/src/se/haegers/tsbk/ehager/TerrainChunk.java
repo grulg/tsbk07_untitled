@@ -53,10 +53,20 @@ public class TerrainChunk extends BoxShaped
 		return false;
 	}
 	
-	public void refreshSolidMesh()
+	public void refreshWaterMesh()
 	{
-		//System.out.printf("MeshMaker: %d, %d, %d\n", xOff, yOff, zOff);
+		parent.refreshWaterNormals(xOff-1, yOff-1, zOff-1,
+			xOff+pointsPerSide+1, yOff+pointsPerSide+1, zOff+pointsPerSide+1);
 		
+		parent.makeWaterEdges(xOff, xOff+pointsPerSide, 
+				yOff, yOff+pointsPerSide,
+				zOff, zOff+pointsPerSide);
+		
+		waterMesh = parent.getCurrentMesh();
+	}
+	
+	public void refreshSolidMesh()
+	{	
 		parent.refreshSolidNormals(xOff-1, yOff-1, zOff-1,
 			xOff+pointsPerSide+1, yOff+pointsPerSide+1, zOff+pointsPerSide+1);
 		
@@ -70,8 +80,8 @@ public class TerrainChunk extends BoxShaped
 	
 	public static void setGroundShader(String vec, String frag)
 	{
-		terrainShader = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
-		Gdx.app.log("sTest", terrainShader.isCompiled() ? "sTest compiled successfully" : terrainShader.getLog());
+		terrainShader = new ShaderProgram(Gdx.files.internal(vec), Gdx.files.internal(frag));
+		Gdx.app.log("Terrain", terrainShader.isCompiled() ? "Terrain compiled successfully" : terrainShader.getLog());
 	}
 	public static void beginGroundRender(Matrix4 projection)
 	{
@@ -84,8 +94,8 @@ public class TerrainChunk extends BoxShaped
 	}
 	public static void setWaterShader(String vec, String frag)
 	{
-		waterShader = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
-		Gdx.app.log("sTest", waterShader.isCompiled() ? "sTest compiled successfully" : waterShader.getLog());
+		waterShader = new ShaderProgram(Gdx.files.internal(vec), Gdx.files.internal(frag));
+		Gdx.app.log("Water", waterShader.isCompiled() ? "Water compiled successfully" : waterShader.getLog());
 	}
 	public static void beginWaterRender(Matrix4 projection)
 	{

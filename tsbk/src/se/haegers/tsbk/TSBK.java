@@ -158,7 +158,6 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		camera.update();
 		batch = new SpriteBatch();
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-		
 		//Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 		//Gdx.gl.glCullFace(GL20.GL_BACK);
 		
@@ -252,6 +251,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	{	
 		
 		TerrainChunk.setGroundShader("shaders/terrain.vsh", "shaders/terrain.fsh");
+		TerrainChunk.setWaterShader("shaders/water.vsh", "shaders/water.fsh");
 		chunks = new Vector<TerrainChunk>();
 		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
@@ -287,7 +287,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 			}
 		}
 		for(int q=0; q < chunks.size(); ++q)
+		{
 			chunks.get(q).refreshSolidMesh();
+			chunks.get(q).refreshWaterMesh();
+		}
 		
 		System.out.printf("Meshification complete.\n");
 	}
@@ -379,7 +382,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	{	
 		Vector3 tar = camera.position.cpy().mulAdd(camera.direction, 2);
 		
-		tField.activatePointsCloseTo(tar.x, tar.y, tar.z, 2);
+		tField.activatePointsCloseTo(tar.x, tar.y-1.0f, tar.z, 2);
 		boolean meshesChanged = false;
 		//Update activated points, and the meshes derived from them.
 		if(buttons.get(Move_Buttons.SET_SOLID))
@@ -400,7 +403,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 			for(int q=0; q < chunks.size(); ++q)
 			{
 				if(chunks.get(q).pointsIncluded(tField.getActivePoints()))
+				{
 					chunks.get(q).refreshSolidMesh();
+					chunks.get(q).refreshWaterMesh();
+				}
 			}
 		}
 		
@@ -430,6 +436,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		for(int q=0; q < chunks.size(); ++q)
 			chunks.get(q).renderGround();
 		TerrainChunk.endGroundRender();
+		TerrainChunk.beginWaterRender(camera.combined);
+		for(int q=0; q < chunks.size(); ++q)
+			chunks.get(q).renderWater();
+		TerrainChunk.endWaterRender();
 		
 	}
 	

@@ -30,6 +30,8 @@ public class MarchedField
 				{
 					if(y < dimY/2 || ((x == dimX/2 || z == dimZ/2)&& y < dimY-2))
 						type = 1;
+					else if (y < 3*dimY/4)
+						type = 2;
 					else
 						type = 0;
 					
@@ -73,7 +75,7 @@ public class MarchedField
 						if(frac < source.getHeight(x, z))
 							type = 1;
 						else if(frac < waterHeight)
-							type = 2;
+							 type = 2;
 					}
 					
 					field[x][y][z] = new TerrainPoint(x*spacing, y*spacing, z*spacing, type);
@@ -221,6 +223,23 @@ public class MarchedField
 		return ret;
 	}
 	
+	public void refreshWaterNormals(int x1, int y1, int z1, int x2, int y2, int z2)
+	{
+		if(x1 < 0) x1 = 0;	if(x2 >= dimX) x2 = dimX-1;
+		if(y1 < 0) y1 = 0;	if(y2 >= dimY) y2 = dimY-1;
+		if(z1 < 0) z1 = 0;	if(z2 >= dimZ) z2 = dimZ-1;
+		for(int x=x1; x <= x2; ++x)
+		{
+			for(int y=y1; y <= y2; ++y)
+			{
+				for(int z=z1; z <= z2; ++z)
+				{
+					field[x][y][z].setNormal(getWaterNormal(x,y,z));
+				}
+			}
+		}
+	}
+	
 	public void refreshSolidNormals(int x1, int y1, int z1, int x2, int y2, int z2)
 	{
 		if(x1 < 0) x1 = 0;	if(x2 >= dimX) x2 = dimX-1;
@@ -255,6 +274,12 @@ public class MarchedField
 	public float getSpacing()
 	{
 		return spacing;
+	}
+	
+	private float[] getWaterNormal(int x, int y, int z)
+	{
+		//TODO Proper normals for water, but it's almost always going to be flat anyway, so who cares?
+		return new float[] {0.0f, 1.0f, 0.0f};
 	}
 	
 	private float[] getSolidNormal(int x, int y, int z)
@@ -352,6 +377,59 @@ public class MarchedField
 	public int getDimZ()
 	{
 		return dimZ;
+	}
+	
+	public void makeWaterEdges(int xs, int xe, int ys, int ye, int zs, int ze)
+	{
+		if(xs < 0)		xs = 0;
+		if(xe <= xs)	xe = xs+1;
+		if(xe >= dimX-1)xe = dimX-2;		
+		if(ys < 0)		ys = 0;
+		if(ye <= ys)	ye = ys+1;
+		if(ye >= dimY-1)ye = dimY-2;
+		if(zs < 0)		zs = 0;
+		if(ze <= zs)	ze = zs+1;
+		if(ze >= dimZ-1)ze = dimZ-2;
+		
+		edges = new Vector<EdgeVertex>();
+		for(int x=xs; x < xe; ++x)
+		{
+			for(int y=ys; y < ye; ++y)
+			{
+				for(int z=zs; z < ze; ++z)
+				{
+					int ind = 0;
+					
+					if(field[ x ][ y ][ z ].getProperty() == 2) ind |= 1;
+					if(field[x+1][ y ][ z ].getProperty() == 2) ind |= 2;
+					if(field[x+1][ y ][z+1].getProperty() == 2) ind |= 4;
+					if(field[ x ][ y ][z+1].getProperty() == 2) ind |= 8;
+					if(field[ x ][y+1][ z ].getProperty() == 2) ind |= 16;
+					if(field[x+1][y+1][ z ].getProperty() == 2) ind |= 32;
+					if(field[x+1][y+1][z+1].getProperty() == 2)	ind |= 64;
+					if(field[ x ][y+1][z+1].getProperty() == 2) ind |= 128;
+					
+					/*
+					if(ind != 0)
+					{
+						if(field[ x ][ y ][ z ].getProperty() == 1) ind |= 1;
+						if(field[x+1][ y ][ z ].getProperty() == 1) ind |= 2;
+						if(field[x+1][ y ][z+1].getProperty() == 1) ind |= 4;
+						if(field[ x ][ y ][z+1].getProperty() == 1) ind |= 8;
+						//if(ind >= 16)
+						{
+						if(field[ x ][y+1][ z ].getProperty() == 1) ind |= 16;
+						if(field[x+1][y+1][ z ].getProperty() == 1) ind |= 32;
+						if(field[x+1][y+1][z+1].getProperty() == 1)	ind |= 64;
+						if(field[ x ][y+1][z+1].getProperty() == 1) ind |= 128;
+						}
+					}
+					*/
+					
+					edgesAtIndex(x,y,z,ind);
+				}
+			}
+		}
 	}
 	
 	public void makeSolidEdges(int xs, int xe, int ys, int ye, int zs, int ze)
