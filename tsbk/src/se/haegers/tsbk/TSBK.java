@@ -2,12 +2,14 @@ package se.haegers.tsbk;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 
 import se.haegers.tsbk.ehager.EdgeVertex;
 import se.haegers.tsbk.ehager.HeightMap;
 import se.haegers.tsbk.ehager.MarchableCube;
 import se.haegers.tsbk.ehager.MarchedField;
 import se.haegers.tsbk.ehager.NoiseMap;
+import se.haegers.tsbk.ehager.TerrainChunk;
 import se.haegers.tsbk.ehager.TerrainPoint;
 
 import com.badlogic.gdx.ApplicationListener;
@@ -57,7 +59,6 @@ import com.esotericsoftware.spine.SkeletonRendererDebug;
  * @author Emil
  *
  */
-@SuppressWarnings("unused")
 public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Constants used for navigation. Change them to suit your needs!
@@ -96,7 +97,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		CAM_LEFT, 
 		CAM_RIGHT, 
 		CAM_UP, 
-		CAM_DOWN
+		CAM_DOWN,
+		SET_SOLID,
+		SET_AIR
 	}
 	
 	static Map<Move_Buttons, Boolean> buttons = new HashMap<Move_Buttons, Boolean>();
@@ -105,6 +108,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		buttons.put(Move_Buttons.CAM_RIGHT, false);
 		buttons.put(Move_Buttons.CAM_UP, false);
 		buttons.put(Move_Buttons.CAM_DOWN, false);
+		buttons.put(Move_Buttons.SET_SOLID, false);
+		buttons.put(Move_Buttons.SET_AIR, false);
 	}; 
 	
 	/*
@@ -127,8 +132,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	 * Emil's variables
 	 */
 	ShapeRenderer sRend;
-	Mesh cubeMesh;
-	ShaderProgram sTest;
+	Vector<TerrainChunk> chunks;
 	MarchedField tField;
 	
 	@Override
@@ -247,8 +251,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	private void emilCreate() 
 	{	
 		
-		sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
-		Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
+		TerrainChunk.setGroundShader("shaders/terrain.vsh", "shaders/terrain.fsh");
+		chunks = new Vector<TerrainChunk>();
+		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
+		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
 		
 		NoiseMap[] noises = new NoiseMap[]
 				{
@@ -258,18 +264,32 @@ public class TSBK implements ApplicationListener, InputProcessor {
 					new NoiseMap(128, 128, 101, 101)
 				};
 		
-		for(int q=0; q < 4; ++q)
+		for(int q=0; q < noises.length; ++q)
 			noises[q].filterNoise();
 		
 		HeightMap h = new HeightMap(128, 128, noises[0], noises[1], noises[2], noises[3]);
 		
-		h.saveImage("current.png");
+		//h.saveImage("current.png");
 		
-		tField = new MarchedField(h);
 		sRend = new ShapeRenderer();
+		tField = new MarchedField(h);
+		//tField.setSolidNormals();
 		System.out.printf("Starting meshification.\n");
-		cubeMesh = tField.getSolidMesh();
-		System.out.printf("Meshificaion complete.\n");
+		
+		for(int x=0; x < 16; ++x)
+		{
+			for(int y=0; y < 16; ++y)
+			{
+				for(int z=0; z < 16; ++z)
+				{
+					chunks.add(new TerrainChunk(tField, 8, 8*x, 8*y, 8*z));
+				}
+			}
+		}
+		for(int q=0; q < chunks.size(); ++q)
+			chunks.get(q).refreshSolidMesh();
+		
+		System.out.printf("Meshification complete.\n");
 	}
 	
 	@Override
@@ -277,7 +297,6 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		batch.dispose();
 		texture.dispose();
 		makeRedShader.dispose();
-		sTest.dispose();
 		sRend.dispose();
 		
 		atlas.dispose();
@@ -357,23 +376,35 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	}
 
 	private void emilDraw() 
-	{
-		/*
-		sRend.setProjectionMatrix(camera.combined);
-		sRend.begin(ShapeType.Line);
-		sRend.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-		tField.renderNormals(sRend);
-		sRend.end();
-		/*
-		sRend.begin(ShapeType.Point);
-		tField.renderPoints(sRend);
-		sRend.end();
-		*/
-		
+	{	
 		Vector3 tar = camera.position.cpy().mulAdd(camera.direction, 2);
 		
-		tField.activatePointsCloseTo(tar.x, tar.y, tar.z, 5);
+		tField.activatePointsCloseTo(tar.x, tar.y, tar.z, 2);
+		boolean meshesChanged = false;
+		//Update activated points, and the meshes derived from them.
+		if(buttons.get(Move_Buttons.SET_SOLID))
+		{
+			tField.setActivePointsProperty(1);
+			meshesChanged = true;
+		}
+		if(buttons.get(Move_Buttons.SET_AIR))
+		{
+			tField.setActivePointsProperty(0);
+			meshesChanged = true;
+		}
 		
+		//Kind of a shoddy way of checking; here be room for improvement.
+		//(float equalities)
+		if(meshesChanged)
+		{
+			for(int q=0; q < chunks.size(); ++q)
+			{
+				if(chunks.get(q).pointsIncluded(tField.getActivePoints()))
+					chunks.get(q).refreshSolidMesh();
+			}
+		}
+		
+		//Actual drawing happens down here.
 		sRend.setProjectionMatrix(camera.combined);
 		sRend.begin(ShapeType.Point);
 		TerrainPoint[] ts = tField.getActivePoints();
@@ -394,10 +425,12 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		}
 		sRend.end();
 		
-		sTest.begin();
-		sTest.setUniformMatrix("u_projection", camera.combined);
-		cubeMesh.render(sTest, GL20.GL_TRIANGLES);
-		sTest.end();
+		//TODO Frustrum culling.
+		TerrainChunk.beginGroundRender(camera.combined);
+		for(int q=0; q < chunks.size(); ++q)
+			chunks.get(q).renderGround();
+		TerrainChunk.endGroundRender();
+		
 	}
 	
     public void updateCamera() {
@@ -435,11 +468,11 @@ public class TSBK implements ApplicationListener, InputProcessor {
 			 * with the up-vector as rotation axis.
 			 */
 			if(deltaX > 0) {
-				camera.rotateAround(camera.position, camera.up, CAMERA_ROTATE_SPEED);
+				camera.rotateAround(camera.position, new Vector3(0.0f, 1.0f, 0.0f), CAMERA_ROTATE_SPEED);
 				camera.update(); 
 			}
 			else if(deltaX < 0) {
-				camera.rotateAround(camera.position, camera.up, -CAMERA_ROTATE_SPEED);
+				camera.rotateAround(camera.position, new Vector3(0.0f, 1.0f, 0.0f), -CAMERA_ROTATE_SPEED);
 				camera.update(); 
 			}
 			
@@ -448,11 +481,11 @@ public class TSBK implements ApplicationListener, InputProcessor {
 			 * get the axis we want to rotate around (and finally normalize it), and we use camera position 
 			 * as rotation point as before.
 			 */
-			if(deltaY > 0) {
+			if(deltaY < 0) {
 				camera.rotateAround(camera.position, camera.up.cpy().crs(camera.direction).nor(), CAMERA_ROTATE_SPEED);
 				camera.update(); 
 			}
-			else if(deltaY < 0) {
+			else if(deltaY > 0) {
 				camera.rotateAround(camera.position, camera.up.cpy().crs(camera.direction).nor(), -CAMERA_ROTATE_SPEED);
 				camera.update(); 
 			}
@@ -489,6 +522,11 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if(keycode == Keys.S) {
 			buttons.get(buttons.put(Move_Buttons.CAM_DOWN, true));
 		}
+		if(keycode == Keys.NUM_1)
+			buttons.get(buttons.put(Move_Buttons.SET_SOLID, true));
+		if(keycode == Keys.NUM_0)
+			buttons.get(buttons.put(Move_Buttons.SET_AIR, true));
+		
 		return false;
 	}
 
@@ -506,7 +544,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if(keycode == Keys.S) {
 			buttons.get(buttons.put(Move_Buttons.CAM_DOWN, false));
 		}
-		
+		if(keycode == Keys.NUM_1)
+			buttons.get(buttons.put(Move_Buttons.SET_SOLID, false));
+		if(keycode == Keys.NUM_0)
+			buttons.get(buttons.put(Move_Buttons.SET_AIR, false));
 		return false;
 	}
 
