@@ -37,9 +37,18 @@ public class EdgeVertex
 				normal[1]*normal[1]+
 				normal[2]*normal[2]);
 		
-		normal[0] /= l;
-		normal[1] /= l;
-		normal[2] /= l;
+		if(l > 0)
+		{
+			normal[0] /= l;
+			normal[1] /= l;
+			normal[2] /= l;
+		}
+		else
+		{
+			normal[0] = 0.0f;
+			normal[1] = 1.0f;
+			normal[2] = 0.0f;
+		}
 	}
 	
 	public float getX()

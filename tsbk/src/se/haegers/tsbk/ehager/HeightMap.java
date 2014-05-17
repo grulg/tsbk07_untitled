@@ -73,8 +73,14 @@ public class HeightMap
 				}
 			}
 		}
+		normalize();
 	}
 	
+	public HeightMap(NoiseMap src)
+	{
+		
+	}
+
 	private void normalize()
 	{
 		float max=0.0f, min = 1.0f;
@@ -153,7 +159,7 @@ public class HeightMap
 	
 	public void saveImage(String path)
 	{
-		normalize();
+		//normalize();
 		
 		BufferedImage pic = new BufferedImage(rW, rH, 
 								BufferedImage.TYPE_INT_RGB);

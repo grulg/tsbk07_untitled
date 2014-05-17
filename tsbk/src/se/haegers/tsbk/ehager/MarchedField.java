@@ -116,13 +116,14 @@ public class MarchedField
 		}
 	}
 	
+	/*
 	public Mesh getSolidMesh()
 	{
 		setSolidNormals();
-		makeSolidEdges();
-		
+		makeSolidEdges(1,10,1,10,1,10);
 		return getCurrentMesh();
 	}
+	*/
 	
 	public void activatePointsCloseTo(float x, float y, float z, int n)
 	{
@@ -131,21 +132,24 @@ public class MarchedField
 		yD = y/spacing;
 		zD = z/spacing;
 		
-		int iX, iY, iZ;
-		iX = (int) Math.floor(xD+0.5f);
-		iY = (int) Math.floor(yD+0.5f);
-		iZ = (int) Math.floor(zD+0.5f);
+		int iX, iY, iZ, sX, sY, sZ;
+		sX = (int) Math.floor(xD+0.5f);
+		sY = (int) Math.floor(yD+0.5f);
+		sZ = (int) Math.floor(zD+0.5f);
 		
 		activeVerts = new Vector<TerrainPoint>();
 		
+		iX = sX;
 		for(int q=0; q < n; ++q)
 		{
 			if(iX >= dimX || iX < 0)
 			{ continue; }
+			iY = sY;
 			for(int w=0; w < n; ++w)
 			{
 				if(iY >= dimY || iY < 0)
 				{ continue; }
+				iZ = sZ;
 				for(int e=0; e < n; ++e)
 				{
 					if(iZ >= dimZ || iZ < 0)
@@ -184,13 +188,17 @@ public class MarchedField
 		if(field[x][y][z].getProperty() != p)
 		{
 			field[x][y][z].setProperty(p);
+			//dafuq is this doing here, take it away plx
 			refreshSolidNormals(x-1, y-1, z-1, x+1, y+1, z+1);
-			makeSolidEdges();
+			makeSolidEdges(1,2,1,2,1,2);
 		}
 	}
 	
 	public Mesh getCurrentMesh()
 	{
+		if(edges.size() == 0)
+			return null;
+		
 		Mesh ret = new Mesh(true, edges.size(), 0,
 				new VertexAttribute(Usage.Position, 3, "a_position"),
 				new VertexAttribute(Usage.Normal, 3, "a_normal"));
@@ -215,6 +223,9 @@ public class MarchedField
 	
 	public void refreshSolidNormals(int x1, int y1, int z1, int x2, int y2, int z2)
 	{
+		if(x1 < 0) x1 = 0;	if(x2 >= dimX) x2 = dimX-1;
+		if(y1 < 0) y1 = 0;	if(y2 >= dimY) y2 = dimY-1;
+		if(z1 < 0) z1 = 0;	if(z2 >= dimZ) z2 = dimZ-1;
 		for(int x=x1; x <= x2; ++x)
 		{
 			for(int y=y1; y <= y2; ++y)
@@ -227,7 +238,7 @@ public class MarchedField
 		}
 	}
 	
-	private void setSolidNormals()
+	public void setSolidNormals()
 	{
 		for(int x=0; x < dimX; ++x)
 		{
@@ -239,6 +250,11 @@ public class MarchedField
 				}
 			}
 		}
+	}
+	
+	public float getSpacing()
+	{
+		return spacing;
 	}
 	
 	private float[] getSolidNormal(int x, int y, int z)
@@ -325,32 +341,59 @@ public class MarchedField
 		return field[x][y][z].getProperty();
 	}
 	
-	public void makeSolidEdges()
+	public int getDimX()
 	{
+		return dimX;
+	}
+	public int getDimY()
+	{
+		return dimY;
+	}
+	public int getDimZ()
+	{
+		return dimZ;
+	}
+	
+	public void makeSolidEdges(int xs, int xe, int ys, int ye, int zs, int ze)
+	{
+		//Boundary checks: for easy thinking later.
+		//No need for special cases when making terrain chunks.
+		//System.out.printf("Solid edges: %d - %d,  %d - %d, %d - %d\n", xs, xe, ys, ye, zs, ze);
+		if(xs < 0)		xs = 0;
+		if(xe <= xs)	xe = xs+1;
+		if(xe >= dimX-1)xe = dimX-2;		
+		if(ys < 0)		ys = 0;
+		if(ye <= ys)	ye = ys+1;
+		if(ye >= dimY-1)ye = dimY-2;
+		if(zs < 0)		zs = 0;
+		if(ze <= zs)	ze = zs+1;
+		if(ze >= dimZ-1)ze = dimZ-2;
+		
 		edges = new Vector<EdgeVertex>();
-		for(int x=0; x < dimX-1; ++x)
+		for(int x=xs; x < xe; ++x)
 		{
-			for(int y=0; y < dimY-1; ++y)
+			for(int y=ys; y < ye; ++y)
 			{
-				for(int z=0; z < dimZ-1; ++z)
+				for(int z=zs; z < ze; ++z)
 				{
-					edgesAtIndex(x, y, z);
+					int ind = 0;
+					if(field[ x ][ y ][ z ].getProperty() == 1) ind |= 1;
+					if(field[x+1][ y ][ z ].getProperty() == 1) ind |= 2;
+					if(field[x+1][ y ][z+1].getProperty() == 1) ind |= 4;
+					if(field[ x ][ y ][z+1].getProperty() == 1) ind |= 8;
+					if(field[ x ][y+1][ z ].getProperty() == 1) ind |= 16;
+					if(field[x+1][y+1][ z ].getProperty() == 1) ind |= 32;
+					if(field[x+1][y+1][z+1].getProperty() == 1)	ind |= 64;
+					if(field[ x ][y+1][z+1].getProperty() == 1) ind |= 128;
+					
+					edgesAtIndex(x, y, z, ind);
 				}
 			}
 		}
 	}
 	
-	private void edgesAtIndex(int x, int y, int z)
-	{
-		int ind = 0;
-		if(field[ x ][ y ][ z ].getProperty() == 1) ind |= 1;
-		if(field[x+1][ y ][ z ].getProperty() == 1) ind |= 2;
-		if(field[x+1][ y ][z+1].getProperty() == 1) ind |= 4;
-		if(field[ x ][ y ][z+1].getProperty() == 1) ind |= 8;
-		if(field[ x ][y+1][ z ].getProperty() == 1) ind |= 16;
-		if(field[x+1][y+1][ z ].getProperty() == 1) ind |= 32;
-		if(field[x+1][y+1][z+1].getProperty() == 1)	ind |= 64;
-		if(field[ x ][y+1][z+1].getProperty() == 1) ind |= 128;
+	private void edgesAtIndex(int x, int y, int z, int ind)
+	{		
 		
 		int val = edgeTable[ind];
 		
