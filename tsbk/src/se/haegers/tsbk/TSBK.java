@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import se.haegers.tsbk.ehager.HeightMap;
 import se.haegers.tsbk.ehager.NoiseMap;
 import se.haegers.tsbk.model.MSkydome;
+import se.haegers.tsbk.model.MSkydomeShader;
 import se.haegers.tsbk.model.Skydome;
 
 import com.badlogic.gdx.ApplicationListener;
@@ -233,26 +234,26 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	private void haegerCreate() {
 		
-		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
-				Gdx.files.internal("shaders/skydomeFrag.glsl"));
+//		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
+//				Gdx.files.internal("shaders/skydomeFrag.glsl"));
 //		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/wireframeSkydomeVert.glsl"), 
 //				Gdx.files.internal("shaders/wireframeSkydomeFrag.glsl"));
-		Gdx.app.log("skydome", shader.isCompiled() ? "skydome compiled successfully" : shader.getLog());
+//		Gdx.app.log("skydome", shader.isCompiled() ? "skydome compiled successfully" : shader.getLog());
+//		
+//		this.skydome = new Skydome(
+//				100,									// Resolution
+//				55f,								// Vertical Sweep (degrees)
+//				50,								// Radius
+//				1.0f,								// Height Scale
+//				new Vector3(0, 0, 0),				// Offset
+//				new Vector3(1.0f, 1.0f, 1.0f),		// Base day light ambient color
+//				new Vector3(0.4f, 0.4f, 0.4f),		// Base Night light ambient color
+//				new Vector3(0.25f, 0.31f, 0.63f),	// Base day sky color
+//				new Vector3(0.1f, 0.1f, 0.11f),		// Base night sky color
+//				shader
+//		);
 		
-		this.skydome = new Skydome(
-				100,									// Resolution
-				55f,								// Vertical Sweep (degrees)
-				50,								// Radius
-				1.0f,								// Height Scale
-				new Vector3(0, 0, 0),				// Offset
-				new Vector3(1.0f, 1.0f, 1.0f),		// Base day light ambient color
-				new Vector3(0.4f, 0.4f, 0.4f),		// Base Night light ambient color
-				new Vector3(0.25f, 0.31f, 0.63f),	// Base day sky color
-				new Vector3(0.1f, 0.1f, 0.11f),		// Base night sky color
-				shader
-		);
-		
-		this.mSkydome = new MSkydome(shader);
+		this.mSkydome = new MSkydome();
 		this.mSkydome.create();
 		
 	}
@@ -269,6 +270,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		makeRedShader.dispose();
 		
 		atlas.dispose();
+		
+		mSkydome.dispose();
 	}
 
 	@Override
