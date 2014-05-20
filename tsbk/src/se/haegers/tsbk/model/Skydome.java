@@ -1,8 +1,11 @@
 package se.haegers.tsbk.model;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
@@ -10,7 +13,9 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.math.Vector3;
 
 public class Skydome implements ModelInterface {
 
@@ -18,17 +23,21 @@ public class Skydome implements ModelInterface {
 	 * Source for sky dome model
 	 * https://github.com/libgdx/libgdx/tree/master/tests/gdx-tests-android/assets/data/g3d
 	 * More specifically:
-	 * https://github.com/libgdx/libgdx/blob/master/tests/gdx-tests-android/assets/data/g3d/shapes/sphere.g3dj
-	 * Should probably get the .g3db instead (it's binary => faster).
+	 * https://github.com/libgdx/libgdx/blob/master/tests/gdx-tests-android/assets/data/g3d/skydome.g3db
 	 */
 	
-	private Model model;
-	private Shader shader;
+	private Model skydomeModel;
+	private Model sunModel;
+	private Shader skydomeShader;
+	private Shader sunShader;
 	private Environment environment;
-	private Renderable renderable;
+	private Renderable domeRenderable;
 	private RenderContext renderContext;
 	private AssetManager assets;
 	private boolean loading;
+	private Renderable sunRenderable;
+	private float deltaTime;
+	private float simulationSpeed;
 	
 	@Override
 	public void create() {
@@ -36,52 +45,81 @@ public class Skydome implements ModelInterface {
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
 		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 		
+		skydomeShader = new SkydomeShader();
+		skydomeShader.init();
 		assets = new AssetManager();
 		assets.load("data/skydome.g3db", Model.class);
-		
 		loading = true;
+		
+		sunShader = new SunShader();
+		sunShader.init();
+		ModelBuilder mb = new ModelBuilder();
+		sunModel = mb.createSphere(10, 10, 10, 20, 20, new Material(), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		NodePart blockPart = sunModel.nodes.get(0).parts.get(0);
+		sunRenderable = new Renderable();
+		blockPart.setRenderable(sunRenderable);
+		sunRenderable.environment = null;
+		sunRenderable.worldTransform.idt().translate(new Vector3(0, 200, 0));
+		
+		renderContext = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
+		
+		setSimulationSpeed(1);
+		
 	}
 
+	private void doneLoading() {
+		skydomeModel = assets.get("data/skydome.g3db", Model.class);
+		
+		NodePart blockPart = skydomeModel.nodes.get(0).parts.get(0);
+		domeRenderable = new Renderable();
+		blockPart.setRenderable(domeRenderable);
+		domeRenderable.environment = null;
+		domeRenderable.worldTransform.idt();
+//		domeRenderable.primitiveType = GL20.GL_POINTS;		// Uncomment for point cloud
+//		domeRenderable.primitiveType = GL20.GL_LINES;		// or wire frame
+		
+		loading = false;
+	}
+	
 	@Override
 	public void render(Camera camera) {
 		
 		if(loading && assets.update())
 			doneLoading();
 		
-		if(renderable == null) {
+		if(domeRenderable == null) {
 			return;
 		}
-
+		
+		// Simulation speed
+		deltaTime += Gdx.graphics.getDeltaTime();
+		setSimulationSpeed(0.01f);
+		sunRenderable.worldTransform.setToTranslation((float)(200*Math.cos(Math.PI/4 + deltaTime*getSimulationSpeed())), (float)(200*Math.sin(Math.PI/4 + deltaTime*getSimulationSpeed())), 0);
+		
 		renderContext.begin();
-		shader.begin(camera, renderContext);
-		shader.render(renderable);
-		shader.end();
+		skydomeShader.begin(camera, renderContext);
+		skydomeShader.render(domeRenderable);
+		skydomeShader.end();
+		
+		sunShader.begin(camera, renderContext);
+		sunShader.render(sunRenderable);
+		sunShader.end();
 		renderContext.end();
-	}
-
-	private void doneLoading() {
-		model = assets.get("data/skydome.g3db", Model.class);
-		
-		NodePart blockPart = model.nodes.get(0).parts.get(0);
-		renderable = new Renderable();
-		blockPart.setRenderable(renderable);
-		renderable.environment = null;
-		renderable.worldTransform.idt();
-//		renderable.primitiveType = GL20.GL_POINTS;		// Uncomment for point cloud
-//		renderable.primitiveType = GL20.GL_LINES;		// or wire frame
-
-		renderContext = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
-		shader = new SkydomeShader();
-		shader.init();
-		
-		loading = false;
 	}
 
 	@Override
 	public void dispose() {
-		model.dispose();
-		shader.dispose();
+		skydomeModel.dispose();
+		skydomeShader.dispose();
 //		assets.dispose();
+	}
+
+	private float getSimulationSpeed() {
+		return simulationSpeed;
+	}
+
+	private void setSimulationSpeed(float simulationSpeed) {
+		this.simulationSpeed = simulationSpeed;
 	}
 
 }

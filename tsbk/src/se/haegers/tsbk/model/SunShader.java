@@ -3,24 +3,23 @@ package se.haegers.tsbk.model;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
-public class SkydomeShader implements Shader {
+public class SunShader implements Shader {
 	
 	private ShaderProgram program;
-	private Texture texture;
+//	private Texture texture;
 
 	@Override
 	public void init() {
-		program = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
-									Gdx.files.internal("shaders/skydomeFrag.glsl"));
+		program = new ShaderProgram(Gdx.files.internal("shaders/sunVert.glsl"), 
+									Gdx.files.internal("shaders/sunFrag.glsl"));
 		
-		texture = new Texture(Gdx.files.internal("data/skydome1.png"));
+//		texture = new Texture(Gdx.files.internal("data/skydome1.png"));
 		
 		if(!program.isCompiled())
 			throw new GdxRuntimeException(program.getLog());
@@ -47,13 +46,15 @@ public class SkydomeShader implements Shader {
 	@Override
 	public void begin(Camera camera, RenderContext context) {
 		program.begin();
-		texture.bind(10);
+//		texture.bind(10);
+//		program.setUniformi("u_texture", 10);
 		program.setUniformMatrix("u_combinedMat", camera.combined);
-		program.setUniformi("u_texture", 10);
+
 		
 //		context.setDepthTest(GL20.GL_LEQUAL);	// TODO Is this the right parameter?
 		context.setCullFace(GL20.GL_BACK);
 		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
+		Gdx.gl.glEnable(GL20.GL_BLEND);
 	}
 
 	@Override
@@ -66,6 +67,7 @@ public class SkydomeShader implements Shader {
 	public void end() {
 		program.end();
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 
 }
