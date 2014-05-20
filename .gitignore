@@ -47,3 +47,6 @@ tmp/**/*
 
 # PDT-specific
 .buildpath
+
+# Windows faggotry
+Thumbs.db

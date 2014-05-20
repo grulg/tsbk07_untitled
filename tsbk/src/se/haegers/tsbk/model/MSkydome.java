@@ -1,6 +1,6 @@
 package se.haegers.tsbk.model;
 
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -8,11 +8,9 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
-import com.badlogic.gdx.utils.JsonReader;
 
 public class MSkydome implements ModelInterface {
 
@@ -29,6 +27,8 @@ public class MSkydome implements ModelInterface {
 	private Environment environment;
 	private Renderable renderable;
 	private RenderContext renderContext;
+	private AssetManager assets;
+	private boolean loading;
 	
 	@Override
 	public void create() {
@@ -36,27 +36,22 @@ public class MSkydome implements ModelInterface {
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
 		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 		
-		G3dModelLoader loader = new G3dModelLoader(new JsonReader());
-		model = new Model(loader.loadModelData(Gdx.files.internal("data/sphere.g3dj"), null));
+		assets = new AssetManager();
+		assets.load("data/skydome.g3db", Model.class);
 		
-		
-		NodePart blockPart = model.nodes.get(0).parts.get(0);
-		
-		renderable = new Renderable();
-		blockPart.setRenderable(renderable);
-//		renderable.environment = environment;
-		renderable.environment = null;					// TODO Här är du. Normaler åt fel håll?
-		renderable.worldTransform.idt();
-//		renderable.primitiveType = GL20.GL_POINTS;		// Uncomment for point cloud
-//		renderable.primitiveType = GL20.GL_LINES;		// or wire frame
-		
-		renderContext = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
-		shader = new MSkydomeShader();
-		shader.init();
+		loading = true;
 	}
 
 	@Override
 	public void render(Camera camera) {
+		
+		if(loading && assets.update())
+			doneLoading();
+		
+		if(renderable == null) {
+			return;
+		}
+
 		renderContext.begin();
 		shader.begin(camera, renderContext);
 		shader.render(renderable);
@@ -64,10 +59,29 @@ public class MSkydome implements ModelInterface {
 		renderContext.end();
 	}
 
+	private void doneLoading() {
+		model = assets.get("data/skydome.g3db", Model.class);
+		
+		NodePart blockPart = model.nodes.get(0).parts.get(0);
+		renderable = new Renderable();
+		blockPart.setRenderable(renderable);
+		renderable.environment = null;
+		renderable.worldTransform.idt();
+//		renderable.primitiveType = GL20.GL_POINTS;		// Uncomment for point cloud
+//		renderable.primitiveType = GL20.GL_LINES;		// or wire frame
+
+		renderContext = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
+		shader = new MSkydomeShader();
+		shader.init();
+		
+		loading = false;
+	}
+
 	@Override
 	public void dispose() {
 		model.dispose();
 		shader.dispose();
+//		assets.dispose();
 	}
 
 }
