@@ -10,7 +10,7 @@ import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
-public class MSkydomeShader implements Shader {
+public class SkydomeShader implements Shader {
 	
 	private ShaderProgram program;
 	private Texture texture;

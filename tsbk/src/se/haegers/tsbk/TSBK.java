@@ -3,7 +3,7 @@ package se.haegers.tsbk;
 import java.util.HashMap;
 import java.util.Map;
 
-import se.haegers.tsbk.model.MSkydome;
+import se.haegers.tsbk.model.Skydome;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -111,7 +111,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Haeger's variables
 	 */
-	private MSkydome mSkydome;
+	private Skydome mSkydome;
 
 	/*
 	 * Emil's variables
@@ -243,7 +243,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 //				shader
 //		);
 		
-		this.mSkydome = new MSkydome();
+		this.mSkydome = new Skydome();
 		this.mSkydome.create();
 		
 	}

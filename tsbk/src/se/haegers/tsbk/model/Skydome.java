@@ -1,191 +1,87 @@
 package se.haegers.tsbk.model;
 
-import java.util.ArrayList;
-
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes.Usage;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Matrix3;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
+import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 
 public class Skydome implements ModelInterface {
-	
-	
-	/**
-	 * Number of segments in a 90 degree slice horizontally and vertically.
-	 */
-	private int resolution;
-	
-	
-	/**
-	 * The range which is to be included in the dome. >0 and <= 90.
-	 */
-	private float verticalSweep;
-	
-	/**
-	 * Radius at the base of the dome.
-	 */
-	private float radius;
-	
-	private float heightScale;
-	
-	private Vector3 origin;
-	
-	private Mesh mesh;
-	
-	private Vector3 baseDayAmbient;
-	
-	private Vector3 baseNightAmbient;
-	
-	private Vector3 baseDayColor;
-	
-	private Vector3 baseNightColor;
-	
-	private Vector3 currentSunNormal;
-	
-	private Vector3 currentAmbient;
-	
-	private Vector3 currentSkyColor;
-	
-	private ShaderProgram shader;
-	
-	
-	public Skydome(int resolution, float verticalSweep, float radius, float heightScale,
-			Vector3 origin, Vector3 dayAmbient, Vector3 nightAmbient, Vector3 dayColor, 
-			Vector3 nightColor, ShaderProgram shader) {
-		
-		// Validation
-		assert (resolution > 0 && radius > 0);
-		assert (verticalSweep > 0 && verticalSweep <= 90);
-		
-		
-		this.resolution = resolution;
-		this.verticalSweep = verticalSweep;
-		this.radius = radius;
-		this.heightScale = heightScale;
-		this.origin = origin;
-		this.baseDayAmbient = dayAmbient;
-		this.baseDayColor = dayColor;
-		this.baseNightAmbient = nightAmbient;
-		this.baseNightColor = nightColor;
-		this.shader = shader;
-		
-		// Calculate number of vertices and prepare the mesh
-		int numberOfVertices = 1 + 4 * resolution * resolution;
-		this.mesh = new Mesh(true, numberOfVertices, 0, new VertexAttribute(Usage.Position, 3, "a_position"));
-		
-		// Adjust the radius based on the vertical sweep
-		double radAngle = (90 - verticalSweep) / 180 * Math.PI;
-		radius /= Math.cos(radAngle);
-		
-		// Compute the y adjustment
-		float yAdjust = (float) (radius * Math.sin(radAngle));
-		
-		// Calculate the horizontal sweep of one section of the dome
-		// based on the resolution 
-		float horizontalSweep = 360f / resolution;
-		
-		// Adjust with the given resolution
-		this.verticalSweep /= resolution;
-		
-		ArrayList<Float> vertices = new ArrayList<Float>();
-		
-		// Start the array with the vertex at the top of the dome
-		vertices.add(origin.x);
-		vertices.add(((radius - yAdjust) * heightScale) + origin.y);
-		vertices.add(origin.z);
-		
-		for (int i = 0; i < resolution; i++) {
-			
-			// Compute the vertex that will be rotated around to make a ring
-			
-			// Place the vertex at the top
-			Vector3 vertex = new Vector3(0, radius, 0);
-			Matrix4 m = new Matrix4();
-			
-			// Rotate the vertex "down" from the top, revolving around the X-axis
-			m.setToRotation(Vector3.X, verticalSweep * (i + 1));
-			vertex.mul(m);
-//			assert vertex.z > (zAdjust - ON_EPSILON)
-			vertex.y = (vertex.y - yAdjust) * heightScale;
-			
-			
-			Vector3 tmp;
-			for (int j = 0; j < resolution; j++) {
-				
-				// Loop through the ring
-				Matrix4 n = new Matrix4();
-				n.setToRotation(Vector3.Y, horizontalSweep * j);
-				tmp = new Vector3(vertex);
-				tmp.mul(n);
-				tmp.add(origin);
-				
-				vertices.add(tmp.x);
-				vertices.add(tmp.y);
-				vertices.add(tmp.z);
-			}
-		}
-		
-		float[] v = toFloatArray(vertices);
-		mesh.setVertices(v);
-		
-//		float[] v = new float[mesh.getNumVertices()];
-//		mesh.getVertices(v);
-		System.out.println("Calculated vertices: " + numberOfVertices);
-		System.out.println("Mesh vertices: " + mesh.getNumVertices());
-		System.out.println("V.length / 3 = " + v.length / 3);
-//		for(int i = 0; i < v.length; ++i) {
-//			
-//			System.out.print(String.format("%.5g", v[i]));
-//			
-//			if((i > 0) && ((i % 3) == 2))
-//				System.out.println();
-//			else
-//				System.out.print(", ");
-//		}
-	}
 
-	private float[] toFloatArray(ArrayList<Float> vertices) {
-		
-		float[] a = new float[vertices.size()];
-		
-		for(int i = 0; i < vertices.size(); ++i) {
-			a[i] = vertices.get(i);
-		}
-		
-		return a;
-	}
-
+	/*
+	 * Source for sky dome model
+	 * https://github.com/libgdx/libgdx/tree/master/tests/gdx-tests-android/assets/data/g3d
+	 * More specifically:
+	 * https://github.com/libgdx/libgdx/blob/master/tests/gdx-tests-android/assets/data/g3d/shapes/sphere.g3dj
+	 * Should probably get the .g3db instead (it's binary => faster).
+	 */
+	
+	private Model model;
+	private Shader shader;
+	private Environment environment;
+	private Renderable renderable;
+	private RenderContext renderContext;
+	private AssetManager assets;
+	private boolean loading;
+	
 	@Override
 	public void create() {
+		environment = new Environment();
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
+		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 		
+		assets = new AssetManager();
+		assets.load("data/skydome.g3db", Model.class);
+		
+		loading = true;
 	}
 
 	@Override
 	public void render(Camera camera) {
-		GL20 gl = Gdx.gl20;
-		Matrix4 cameraMatrix = camera.combined;
 		
-		gl.glEnable(GL20.GL_BLEND);
-		gl.glDepthMask(false);
+		if(loading && assets.update())
+			doneLoading();
 		
-		shader.begin();
-		shader.setUniformMatrix("u_combinedMat", cameraMatrix);
-		mesh.render(shader, GL20.GL_LINES);
+		if(renderable == null) {
+			return;
+		}
+
+		renderContext.begin();
+		shader.begin(camera, renderContext);
+		shader.render(renderable);
 		shader.end();
+		renderContext.end();
+	}
+
+	private void doneLoading() {
+		model = assets.get("data/skydome.g3db", Model.class);
 		
-		gl.glDisable(GL20.GL_BLEND);
-		gl.glDepthMask(true);
+		NodePart blockPart = model.nodes.get(0).parts.get(0);
+		renderable = new Renderable();
+		blockPart.setRenderable(renderable);
+		renderable.environment = null;
+		renderable.worldTransform.idt();
+//		renderable.primitiveType = GL20.GL_POINTS;		// Uncomment for point cloud
+//		renderable.primitiveType = GL20.GL_LINES;		// or wire frame
+
+		renderContext = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
+		shader = new SkydomeShader();
+		shader.init();
+		
+		loading = false;
 	}
 
 	@Override
 	public void dispose() {
-		shader.dispose();		
+		model.dispose();
+		shader.dispose();
+//		assets.dispose();
 	}
-	
+
 }
