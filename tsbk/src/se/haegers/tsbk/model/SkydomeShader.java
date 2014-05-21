@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class SkydomeShader implements Shader {
 	
+	private static final int TEXTURE_UNIT = 10;
 	private ShaderProgram program;
 	private Texture texture;
 
@@ -47,9 +48,9 @@ public class SkydomeShader implements Shader {
 	@Override
 	public void begin(Camera camera, RenderContext context) {
 		program.begin();
-		texture.bind(10);
+		texture.bind(TEXTURE_UNIT);
 		program.setUniformMatrix("u_combinedMat", camera.combined);
-		program.setUniformi("u_texture", 10);
+		program.setUniformi("u_texture", TEXTURE_UNIT);
 		
 //		context.setDepthTest(GL20.GL_LEQUAL);	// TODO Is this the right parameter?
 		context.setCullFace(GL20.GL_BACK);

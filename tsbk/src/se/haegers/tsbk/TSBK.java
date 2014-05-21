@@ -83,7 +83,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		CAM_UP, 
 		CAM_DOWN,
 		CAM_FORWARD, 
-		CAM_BACKWARD
+		CAM_BACKWARD,
+		SIM_INC,
+		SIM_DEC
 	}
 	
 	static Map<Move_Buttons, Boolean> buttons = new HashMap<Move_Buttons, Boolean>();
@@ -94,6 +96,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		buttons.put(Move_Buttons.CAM_DOWN, false);
 		buttons.put(Move_Buttons.CAM_FORWARD, false);
 		buttons.put(Move_Buttons.CAM_BACKWARD, false);
+		buttons.put(Move_Buttons.SIM_INC, false);
+		buttons.put(Move_Buttons.SIM_DEC, false);
+
 	}; 
 	
 	/*
@@ -317,7 +322,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	private void haegerDraw(Camera camera) {
 		skydome.render(camera);
-		skydome.getSunAngle();
+		skydome.getSunLightDirection();
 	}
 
 	private void emilDraw() {
@@ -355,6 +360,12 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if (buttons.get(Move_Buttons.CAM_BACKWARD)) {
 			camera.translate(camera.direction.cpy().nor().scl(-ZOOM_SPEED));
 			camera.update();
+		}
+		if (buttons.get(Move_Buttons.SIM_INC)) {
+			skydome.setSimulationSpeed(skydome.getSimulationSpeed() + 0.1f);
+		}
+		if (buttons.get(Move_Buttons.SIM_DEC)) {
+			skydome.setSimulationSpeed(skydome.getSimulationSpeed() - 0.1f);
 		}
 		if(leftPressed) {
 			int x = Gdx.input.getX();
@@ -427,6 +438,12 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if(keycode == Keys.C) {
 			buttons.get(buttons.put(Move_Buttons.CAM_BACKWARD, true));
 		}
+		if(keycode == Keys.PAGE_UP) {
+			buttons.get(buttons.put(Move_Buttons.SIM_INC, true));
+		}
+		if(keycode == Keys.PAGE_DOWN) {
+			buttons.get(buttons.put(Move_Buttons.SIM_DEC, true));
+		}
 		return false;
 	}
 
@@ -449,6 +466,12 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		}
 		if(keycode == Keys.C) {
 			buttons.get(buttons.put(Move_Buttons.CAM_BACKWARD, false));
+		}
+		if(keycode == Keys.PAGE_UP) {
+			buttons.get(buttons.put(Move_Buttons.SIM_INC, false));
+		}
+		if(keycode == Keys.PAGE_DOWN) {
+			buttons.get(buttons.put(Move_Buttons.SIM_DEC, false));
 		}
 		return false;
 	}

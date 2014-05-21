@@ -148,7 +148,7 @@ public class Skydome implements ModelInterface {
 	 * Gets the sun's angle vector towards the world.
 	 * @return a normalized @Vector3 pointing in the sun's lighting direction. 
 	 */
-	public Vector3 getSunAngle() {
+	public Vector3 getSunLightDirection() {
 		Vector3 v = new Vector3(1, 0, 0);
 		
 		v.rotateRad(Vector3.Z, (float)Math.atan(sunY/sunX)).nor();

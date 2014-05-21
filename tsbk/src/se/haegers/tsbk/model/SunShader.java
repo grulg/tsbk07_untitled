@@ -3,6 +3,7 @@ package se.haegers.tsbk.model;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
@@ -11,15 +12,16 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class SunShader implements Shader {
 	
+	private static final int TEXTURE_UNIT = 12;
 	private ShaderProgram program;
-//	private Texture texture;
+	private Texture texture;
 
 	@Override
 	public void init() {
 		program = new ShaderProgram(Gdx.files.internal("shaders/sunVert.glsl"), 
 									Gdx.files.internal("shaders/sunFrag.glsl"));
 		
-//		texture = new Texture(Gdx.files.internal("data/skydome1.png"));
+		texture = new Texture(Gdx.files.internal("data/CroppedSun.jpg"));
 		
 		if(!program.isCompiled())
 			throw new GdxRuntimeException(program.getLog());
@@ -46,8 +48,8 @@ public class SunShader implements Shader {
 	@Override
 	public void begin(Camera camera, RenderContext context) {
 		program.begin();
-//		texture.bind(10);
-//		program.setUniformi("u_texture", 10);
+		texture.bind(TEXTURE_UNIT);
+		program.setUniformi("u_texture", TEXTURE_UNIT);
 		program.setUniformMatrix("u_combinedMat", camera.combined);
 
 		
