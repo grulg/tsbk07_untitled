@@ -111,7 +111,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Haeger's variables
 	 */
-	private Skydome mSkydome;
+	private Skydome skydome;
 
 	/*
 	 * Emil's variables
@@ -224,27 +224,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	private void haegerCreate() {
 		
-//		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
-//				Gdx.files.internal("shaders/skydomeFrag.glsl"));
-//		ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/wireframeSkydomeVert.glsl"), 
-//				Gdx.files.internal("shaders/wireframeSkydomeFrag.glsl"));
-//		Gdx.app.log("skydome", shader.isCompiled() ? "skydome compiled successfully" : shader.getLog());
-//		
-//		this.skydome = new Skydome(
-//				100,									// Resolution
-//				55f,								// Vertical Sweep (degrees)
-//				50,								// Radius
-//				1.0f,								// Height Scale
-//				new Vector3(0, 0, 0),				// Offset
-//				new Vector3(1.0f, 1.0f, 1.0f),		// Base day light ambient color
-//				new Vector3(0.4f, 0.4f, 0.4f),		// Base Night light ambient color
-//				new Vector3(0.25f, 0.31f, 0.63f),	// Base day sky color
-//				new Vector3(0.1f, 0.1f, 0.11f),		// Base night sky color
-//				shader
-//		);
-		
-		this.mSkydome = new Skydome();
-		this.mSkydome.create();
+		skydome = new Skydome();
+		skydome.create();
+		skydome.setSimulationSpeed(0.1f);
 		
 	}
 
@@ -261,7 +243,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		
 		atlas.dispose();
 		
-		mSkydome.dispose();
+		skydome.dispose();
 	}
 
 	@Override
@@ -286,11 +268,11 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		 * Same as above but with our custom shader. More work for the same goal, but is needed when we want
 		 * flashier stuff.
 		 */
-//		makeRedShader.begin();
-//		makeRedShader.setUniformi("u_texture", 0);
-//		makeRedShader.setUniformMatrix("u_combinedMat", camera.combined);
-//		mesh.render(makeRedShader, GL20.GL_TRIANGLE_FAN);
-//		makeRedShader.end();
+		makeRedShader.begin();
+		makeRedShader.setUniformi("u_texture", 0);
+		makeRedShader.setUniformMatrix("u_combinedMat", camera.combined);
+		mesh.render(makeRedShader, GL20.GL_TRIANGLE_FAN);
+		makeRedShader.end();
 		
 		/*
 		 * Just expand our own draw for now, so we won't have an issue with merging later.
@@ -334,7 +316,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	}
 
 	private void haegerDraw(Camera camera) {
-		mSkydome.render(camera);
+		skydome.render(camera);
+		skydome.getSunAngle();
 	}
 
 	private void emilDraw() {

@@ -26,6 +26,7 @@ public class Skydome implements ModelInterface {
 	 * https://github.com/libgdx/libgdx/blob/master/tests/gdx-tests-android/assets/data/g3d/skydome.g3db
 	 */
 	
+	private static final double SUN_START = 0;
 	private Model skydomeModel;
 	private Model sunModel;
 	private Shader skydomeShader;
@@ -36,8 +37,10 @@ public class Skydome implements ModelInterface {
 	private AssetManager assets;
 	private boolean loading;
 	private Renderable sunRenderable;
-	private float deltaTime;
+	private float simulationTime;
 	private float simulationSpeed;
+	private float sunX;
+	private float sunY;
 	
 	@Override
 	public void create() {
@@ -91,10 +94,11 @@ public class Skydome implements ModelInterface {
 			return;
 		}
 		
-		// Simulation speed
-		deltaTime += Gdx.graphics.getDeltaTime();
-		setSimulationSpeed(0.01f);
-		sunRenderable.worldTransform.setToTranslation((float)(200*Math.cos(Math.PI/4 + deltaTime*getSimulationSpeed())), (float)(200*Math.sin(Math.PI/4 + deltaTime*getSimulationSpeed())), 0);
+		simulationTime += Gdx.graphics.getDeltaTime();
+		
+		sunX = (float)(200*Math.cos(SUN_START + simulationTime*getSimulationSpeed()));
+		sunY = (float)(200*Math.sin(SUN_START + simulationTime*getSimulationSpeed()));
+		sunRenderable.worldTransform.setToTranslation(sunX, sunY, 0);
 		
 		renderContext.begin();
 		skydomeShader.begin(camera, renderContext);
@@ -114,12 +118,44 @@ public class Skydome implements ModelInterface {
 //		assets.dispose();
 	}
 
-	private float getSimulationSpeed() {
+	/**
+	 * Gets the scalar of which is used in the sun's rotation simulation.
+	 * @return A scalar. 1.0 means full speed.
+	 */
+	public float getSimulationSpeed() {
 		return simulationSpeed;
 	}
 
-	private void setSimulationSpeed(float simulationSpeed) {
+	/**
+	 * Set the scalar which is used in the sun's rotation simulation.
+	 * @param simulationSpeed 1.0 means full speed, 0.5 means half the speed, etc.
+	 */
+	public void setSimulationSpeed(float simulationSpeed) {
 		this.simulationSpeed = simulationSpeed;
+	}
+	
+	/**
+	 * Gets the sun's world coordinates.
+	 * @return a @Vector3 containing the sun's world coordinates.
+	 */
+	public Vector3 getSunPosition() {
+		Vector3 v = new Vector3();
+		sunRenderable.worldTransform.getTranslation(v);
+		return v;
+	}
+	
+	/**
+	 * Gets the sun's angle vector towards the world.
+	 * @return a normalized @Vector3 pointing in the sun's lighting direction. 
+	 */
+	public Vector3 getSunAngle() {
+		Vector3 v = new Vector3(1, 0, 0);
+		
+		v.rotateRad(Vector3.Z, (float)Math.atan(sunY/sunX)).nor();
+		if(getSunPosition().x > 0)
+			v.scl(-1);
+		
+		return v;
 	}
 
 }
