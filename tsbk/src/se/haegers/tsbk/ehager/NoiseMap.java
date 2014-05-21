@@ -8,7 +8,7 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import edu.emory.mathcs.jtransforms.fft.DoubleFFT_2D;
+import edu.emory.mathcs.jtransforms.fft.FloatFFT_2D;
 
 public class NoiseMap 
 {
@@ -19,12 +19,15 @@ public class NoiseMap
 		this.height = height;
 		
 		long seed = ((long)x << 32) | (long) y;
-		
+	
 		numberGenerator = new Random(seed);		
-		noise = new double[width][height];
+			
+		noise = new float[width][height];
+		average = 0.0f;
 		
 		filter = new Filter(width, height);
 		filter.makeBrown();
+		//filter.makePowFalloff(1.4f);
 		//filter.makeFromGrayscale("filter.png");
 		
 		generateNoise();
@@ -40,7 +43,7 @@ public class NoiseMap
 		{
 			for(int y=0; y < height; ++y) 
 			{
-				double n = numberGenerator.nextGaussian();
+				float n = numberGenerator.nextFloat();//(float) numberGenerator.nextGaussian();
 				noise[x][y] = n;	
 			}
 		}
@@ -65,7 +68,7 @@ public class NoiseMap
 	 */
 	private void transform()
 	{	
-		DoubleFFT_2D tformer = new DoubleFFT_2D(height, width);
+		FloatFFT_2D tformer = new FloatFFT_2D(height, width);
 		tformer.realInverse(noise, true);
 	}
 	
@@ -86,16 +89,34 @@ public class NoiseMap
 	 * @param y
 	 * @return
 	 */
-	public double getNoise(int x, int y)
+	public float getNoise(int x, int y)
 	{
 		return noise[x][y];
 	}
 	
+	public float getAverage()
+	{
+		if(average != 0.0f)
+			return average;
+		
+		float ret = 0;
+		for(int x=0; x < width; ++x)
+		{
+			for(int y=0; y < height; ++y)
+			{
+				ret += noise[x][y];
+			}
+		}
+		ret = ret / (width*height);
+		average = ret;
+		return ret;
+	}
+	
 	private void normalizeNoise()
 	{
-		double max=0.0f, min = 1.0f;
+		float max=0.0f, min = 1.0f;
 		
-		nNoise = new double[width][height];
+		nNoise = new float[width][height];
 		
 		for(int x=0; x < width; ++x)
 		{
@@ -171,9 +192,9 @@ public class NoiseMap
 			for(int y=0; y < height; ++y)
 			{
 				pic.setRGB(x, y, 
-						new Color((float) nNoise[x][y], 
-								(float) nNoise[x][y],
-								(float) nNoise[x][y]).getRGB());
+						new Color(nNoise[x][y], 
+								nNoise[x][y],
+								nNoise[x][y]).getRGB());
 			}
 		}
 		File ofile = new File(path);
@@ -202,8 +223,9 @@ public class NoiseMap
 		//normalizeNoise();
 	}
 	
-	private double[][] noise;
-	private double[][] nNoise;
+	private float[][] noise;
+	private float[][] nNoise;
+	private float average;
 	private Filter filter;
 	private int width, height;
 	private Random numberGenerator;

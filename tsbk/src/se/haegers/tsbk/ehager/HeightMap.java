@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
 import javax.imageio.ImageIO;
 
 public class HeightMap 
@@ -12,10 +11,10 @@ public class HeightMap
 	public HeightMap(int w, int h, NoiseMap ul, NoiseMap ur, NoiseMap lr, NoiseMap ll)
 	{
 		width = w; height = h;
-		realWidth = w-smoothRegion;
-		realHeight = h-smoothRegion;
-		heights = new double[realWidth][realHeight];
-
+		rW = w-smoothRegion;
+		rH = h-smoothRegion;
+		heights = new float[rW][rH];
+		
 		this.ll = ll;
 		this.ur = ur;
 		this.lr = lr;
@@ -45,14 +44,14 @@ public class HeightMap
 				else
 				{	
 					int xs, ys;
-					double xf, yf, val1, val2;
+					float xf, yf, val1, val2;
 					
 					if(xSmooth && ySmooth)
 					{
 						xs = (x-width/2)+smoothRegion;
 						ys = (y-height/2)+smoothRegion;
-						xf = (double)xs/smoothRegion;
-						yf = (double)ys/smoothRegion;
+						xf = (float)xs/smoothRegion;
+						yf = (float)ys/smoothRegion;
 						
 						val1 = (1-xf)*noiseFromMaps(x,y)+xf*noiseFromMaps(x+smoothRegion, y);
 						val2 = (1-xf)*noiseFromMaps(x,y+smoothRegion)+xf*noiseFromMaps(x+smoothRegion, y+smoothRegion);
@@ -62,27 +61,33 @@ public class HeightMap
 					else if(xSmooth)
 					{
 						xs = (x-width/2)+smoothRegion;
-						xf = (double)xs/smoothRegion;
+						xf = (float)xs/smoothRegion;
 						heights[rx][ry] = (1-xf)*noiseFromMaps(x,y)+xf*noiseFromMaps(x+smoothRegion, y);
 					}
 					else if(ySmooth)
 					{
 						ys = (y-height/2)+smoothRegion;
-						yf = (double)ys/smoothRegion;
+						yf = (float)ys/smoothRegion;
 						heights[rx][ry] = (1-yf)*noiseFromMaps(x,y)+yf*noiseFromMaps(x, y+smoothRegion);
 					}
 				}
 			}
 		}
+		normalize();
 	}
 	
+	public HeightMap(NoiseMap src)
+	{
+		
+	}
+
 	private void normalize()
 	{
-		double max=0.0f, min = 1.0f;
+		float max=0.0f, min = 1.0f;
 		
-		for(int x=0; x < realWidth; ++x)
+		for(int x=0; x < rW; ++x)
 		{
-			for(int y=0; y < realHeight; ++y)
+			for(int y=0; y < rH; ++y)
 			{
 				if(heights[x][y] > max)
 					max = heights[x][y];
@@ -91,18 +96,18 @@ public class HeightMap
 			}
 		}
 		max = max-min;
-		for(int x=0; x < realWidth; ++x)
+		for(int x=0; x < rW; ++x)
 		{
-			for(int y=0; y < realHeight; ++y)
+			for(int y=0; y < rH; ++y)
 			{
 				heights[x][y] = (heights[x][y]-min)/max;
 			}
 		}
 	}
 	
-	private double noiseFromMaps(int x, int y)
+	private float noiseFromMaps(int x, int y)
 	{
-		double tmp;
+		float tmp;
 		try
 		{
 			if(x < width/2)
@@ -137,26 +142,36 @@ public class HeightMap
 		return tmp;
 	}
 	
-	public double getHeight(int x, int y)
+	public float getHeight(int x, int y)
 	{
 		return heights[x][y];
 	}
 	
+	public int getW()
+	{
+		return rW;
+	}
+	
+	public int getH()
+	{
+		return rH;
+	}
+	
 	public void saveImage(String path)
 	{
-		normalize();
+		//normalize();
 		
-		BufferedImage pic = new BufferedImage(realWidth, realHeight, 
+		BufferedImage pic = new BufferedImage(rW, rH, 
 								BufferedImage.TYPE_INT_RGB);
 		
-		for(int x=0; x < realWidth; ++x)
+		for(int x=0; x < rW; ++x)
 		{
-			for(int y=0; y < realHeight; ++y)
+			for(int y=0; y < rH; ++y)
 			{
 				pic.setRGB(x, y, 
-						new Color((float) heights[x][y], 
-								(float) heights[x][y],
-								(float) heights[x][y]).getRGB());
+						new Color(heights[x][y], 
+								 heights[x][y],
+								 heights[x][y]).getRGB());
 			}
 		}
 		File ofile = new File(path);
@@ -171,7 +186,7 @@ public class HeightMap
 	}
 	
 	private NoiseMap ul, ur, lr, ll;
-	private int width, height, realWidth, realHeight;
-	private final int smoothRegion = 16;
-	private double[][] heights;
+	private int width, height, rW, rH;
+	private final int smoothRegion = 8;
+	private float[][] heights;
 }

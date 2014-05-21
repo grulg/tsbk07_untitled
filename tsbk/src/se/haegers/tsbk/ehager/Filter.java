@@ -17,11 +17,11 @@ public class Filter
 		height = hei;
 		
 		//For "square" filters, xscale = 2*yscale.
-		xscale = 1.0;
-		yscale = 2.0;
+		xscale = 2.0f;
+		yscale = 1.0f;
 		
 		packer = new RealFFTUtils_2D(wid, hei);
-		bins = new double[wid][hei];
+		bins = new float[wid][hei];
 	}
 	
 	public double getBin(int x, int y)
@@ -44,7 +44,7 @@ public class Filter
 		bins[0][0] = 1.0f;
 	}
 	
-	public void makeSquare(int x, int y, int wid, int hei, double insq, double osq)
+	public void makeSquare(int x, int y, int wid, int hei, float insq, float osq)
 	{
 		if(x+wid > width || y+hei > height || x < 0 || y < 0)
 			return;
@@ -87,11 +87,11 @@ public class Filter
 			{
 				if(x == 0 || x == width/2)
 					continue;
-				double xs, ys;
+				float xs, ys;
 				xs = Math.abs(x*xscale);
 				ys = Math.abs(y*yscale);
 				
-				packer.pack(1.0f/(Math.sqrt(xs*xs+ys*ys)+1), x, y, bins);
+				packer.pack(1.0f/((float)Math.sqrt(xs*xs+ys*ys)+1), x, y, bins);
 			}
 		}
 		//System.out.printf("Filter max: %f\n", max);
@@ -105,13 +105,36 @@ public class Filter
 			{
 				if(y == 1 && (x == 0 || x == width/2))
 					continue;
-				double xs, ys;
+				float xs, ys;
 				xs = x*xscale;
 				ys = y*yscale;
 
-				packer.pack(1.0f/((xs*xs+ys+ys)+1), x, y, bins);
+				packer.pack(1.0f/((xs*xs+ys*ys)+1.0f), x, y, bins);
 			}
 		}
+	}
+	
+	public void makePowFalloff(double pw)
+	{
+		for(int x=0; x < width; ++x) 
+		{
+			for(int y=0; y < height; ++y)
+			{
+				if(y == 1 && (x == 0 || x == width/2))
+					continue;
+				float xs, ys, d;
+				xs = x*xscale;
+				ys = y*yscale;
+				
+				d = (xs*xs+ys*ys);
+				pw = pw/2.0f;
+				d = (float) Math.pow((double) d, pw);
+
+				packer.pack(1.0f/(d+1.0f), x, y, bins);
+			}
+		}
+		//bins[0][1] = 0.0f;
+		//bins[width/2][1] = 0.0f;
 	}
 	
 	/**
@@ -143,8 +166,8 @@ public class Filter
 		}
 	}
 	
-	private double xscale, yscale;
-	private double[][] bins;
+	private float xscale, yscale;
+	private float[][] bins;
 	private int width, height;
 	private RealFFTUtils_2D packer;
 }
