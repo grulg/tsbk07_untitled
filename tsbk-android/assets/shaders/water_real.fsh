@@ -54,8 +54,7 @@ void main()
 	
 	// Normalize the light direction so that it can fulfill it's intended use later.
 	vec3 lightDirection = normalize(v_lightDirection);
- 	// Hard coded vertex normal, since all our water is completely horizontal.
-	vec3 vertexNormal = (0,1,0);
+
 	float shininess = 0.5;
 	// Completely arbitrary color of the bump for now
 	vec4 bumpColor = vec4(0.65,0.8,1.0,1.0)*0.23;
@@ -77,6 +76,9 @@ void main()
       	}
     }
     
+    // Hard coded vertex normal, since all our water is completely horizontal.
+	vec3 vertexNormal = (0,1,0);
+	
     float NormalDotLight = max(dot(vertexNormal,v_lightDirection),0.0);
     vec4 color = (0.1, 0.1, 0.1, 1.0); //TODO: Change to fit sun color later
     // If the Phong shading resulted in 0.0, don't bother processing it further
@@ -84,7 +86,7 @@ void main()
     {
        color += NormalDotLight;//*diffuse
        
-        vec3 Reflection = -2*vertexNormal*(dot(v_lightDirection, vertexNormal)) + lightDirection; // TODO: andra argument 'normal', (0,1,0) hårdkodat nu
+        vec3 Reflection = -2*vertexNormal*(dot(v_lightDirection, vertexNormal)) + lightDirection;
         float ReflectionDotEyeVector = max(dot(Reflection, v_eyeVector),0.0);
 
      	// Same as above. If the result was 0.0, don't bother. 

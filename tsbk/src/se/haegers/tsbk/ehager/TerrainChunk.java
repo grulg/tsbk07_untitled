@@ -101,7 +101,7 @@ public class TerrainChunk extends BoxShaped
 	public static void setWaterShader(String vec, String frag)
 	{
 		waterShader = new ShaderProgram(Gdx.files.internal(vec), Gdx.files.internal(frag));
-		Gdx.app.log("Water", waterShader.isCompiled() ? "Water compiled successfully" : waterShader.getLog());
+		Gdx.app.log("Water", waterShader.isCompiled() ? "Water compiled successfully!\n" + waterShader.getLog() : waterShader.getLog());
 	}
 	public static void beginWaterRender(Matrix4 projection, Matrix4 view, float[] lDir, Texture normalMapTex, Texture normalMapTex2, Texture waterTex, float elapsedTime)
 	{
@@ -116,6 +116,7 @@ public class TerrainChunk extends BoxShaped
 		
 		waterShader.setUniformMatrix("u_combinedMat", projection);//cameraController.getCamera().combined);
 		waterShader.setUniformMatrix("u_modelViewMat", view);
+		waterShader.setUniform3fv("u_lDir", lDir, 0, 3);
 		waterShader.setUniformi("u_dudvTex", 2);
 		waterShader.setUniformi("u_normalTex", 3);
 		waterShader.setUniformi("u_waterTex", 4);

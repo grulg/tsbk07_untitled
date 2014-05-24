@@ -160,7 +160,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		camera = new PerspectiveCamera(67, w, h);
 		camera.near = 0.1f;
 		camera.far = 100.0f;
-		camera.translate(new Vector3(0,0,2));
+		camera.translate(new Vector3(50,100,100));
 		camera.far = 1000; // TODO Fixa rätt längd någon gång
 		camera.lookAt(0.0f, 0.0f, 0.0f);
 		camera.update();
@@ -267,7 +267,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		
 		skydome = new Skydome();
 		skydome.create();
-		skydome.setSimulationSpeed(0.1f);
+		skydome.setSimulationSpeed(2f); //0.1f
 		
 	}
 
@@ -281,7 +281,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
 		
-		int size = 256;		
+		int size = 128;		
 		NoiseMap[] noises = new NoiseMap[]
 				{
 					new NoiseMap(size, size, 100, 100),
