@@ -21,7 +21,7 @@ public class SkydomeShader implements Shader {
 		program = new ShaderProgram(Gdx.files.internal("shaders/skydomeVert.glsl"), 
 									Gdx.files.internal("shaders/skydomeFrag.glsl"));
 		
-		texture = new Texture(Gdx.files.internal("data/skydome1.png"));
+		texture = new Texture(Gdx.files.internal("data/skydome2.jpg"));
 		
 		if(!program.isCompiled())
 			throw new GdxRuntimeException(program.getLog());

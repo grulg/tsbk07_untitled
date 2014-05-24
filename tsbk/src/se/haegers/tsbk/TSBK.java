@@ -59,7 +59,11 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	private final float ZOOM_SPEED = 0.5f;
 	private final float CAMERA_MOVEMENT_SPEED = 0.1f;
 	private final float CAMERA_ROTATE_SPEED = 2.0f;
-
+	
+	/*
+	 * Textures and dudv/normal-maps used for the water.
+	 */
+	private Texture waterTex;
 	/*
 	 * Objects used for projection, drawing and getting text on the screen.
 	 */
@@ -78,7 +82,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	
 	/*
 	 * Variables used for controlling whether the mouse should rotate the view
-	 * (hold down the left mouse button and move the mouse to see it's use).
+	 * (hold down the left mouse button and move the mouse to see its use).
 	 */
 	private int screen_x = 0, screen_y = 0;
 	private boolean leftPressed = false;
@@ -224,6 +228,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	}
 	
 	private void tholinCreate() {
+		/*
+		 * Spine 
+		 */
 		debugRenderer = new SkeletonRendererDebug();
     	skeletonRenderer = new SkeletonRenderer();
     	
