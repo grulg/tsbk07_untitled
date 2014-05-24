@@ -11,7 +11,7 @@ varying vec2 v_texCoord;
 
 void main(void)
 {
-	v_texCoord = a_texCoord0;
+	v_texCoord = 0.01*a_position.xz;
 
 	vec3 lightSourcePos = vec3(20, 20, 20); //TODO: Hard coded light source for now
 	vec3 eyeVector = u_modelViewMat * a_position;

@@ -103,7 +103,7 @@ void main()
     
     vec3 texelLighted = mix(color.rgb,waterTexl.rgb,0.9995); // The blue is arbitrary
     
-	gl_FragColor = vec4(mix(texelLighted.rgb,bumpColor.rgb,0.10),0.9);
+	gl_FragColor = vec4(mix(texelLighted.rgb,bumpColor.rgb,0.10),0.8);
 }
 
 

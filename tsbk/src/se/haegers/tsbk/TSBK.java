@@ -476,7 +476,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		for(int q=0; q < chunks.size(); ++q)
 			chunks.get(q).renderGround();
 		TerrainChunk.endGroundRender();
-		TerrainChunk.beginWaterRender(camera.combined, camera.view, waterTex, normalMapTex, normalMapTex2, time);
+		TerrainChunk.beginWaterRender(camera.combined, camera.view, normalMapTex, normalMapTex2, waterTex, 0.6f*time);
 		for(int q=0; q < chunks.size(); ++q)
 			chunks.get(q).renderWater();
 		TerrainChunk.endWaterRender();
