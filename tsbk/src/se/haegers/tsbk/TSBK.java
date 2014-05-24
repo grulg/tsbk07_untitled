@@ -280,13 +280,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	{	
 		
 		TerrainChunk.setGroundShader("shaders/terrain.vsh", "shaders/terrain.fsh");
-//<<<<<<< HEAD
 		TerrainChunk.setWaterShader("shaders/water_real.vsh", "shaders/water_real.fsh");
-		//TerrainChunk.setWaterShader("shaders/water.vsh", "shaders/water.fsh");
-//=======
-//		TerrainChunk.setWaterShader("shaders/water.vsh", "shaders/water.fsh");
-//		TerrainChunk.loadGroundTexture("data/Grass_3.png");
-//>>>>>>> ee07e7c966237e435f9f4623308afa753af8ec2b
+		TerrainChunk.loadGroundTexture("data/Grass_3.png");
 		chunks = new Vector<TerrainChunk>();
 		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
