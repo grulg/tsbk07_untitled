@@ -280,8 +280,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
 		
-		int size = 256;
-		
+		int size = 256;		
 		NoiseMap[] noises = new NoiseMap[]
 				{
 					new NoiseMap(size, size, 100, 100),
