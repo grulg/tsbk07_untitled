@@ -77,7 +77,7 @@ public class Skydome implements ModelInterface {
 		domeRenderable = new Renderable();
 		blockPart.setRenderable(domeRenderable);
 		domeRenderable.environment = null;
-		domeRenderable.worldTransform.idt();
+		domeRenderable.worldTransform.idt().setToTranslation(0.0f, -150f, 0.0f);
 //		domeRenderable.primitiveType = GL20.GL_POINTS;		// Uncomment for point cloud
 //		domeRenderable.primitiveType = GL20.GL_LINES;		// or wire frame
 		
