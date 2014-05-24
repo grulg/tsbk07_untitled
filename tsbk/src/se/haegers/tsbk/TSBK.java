@@ -282,21 +282,31 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
 		
 		int size = 256;		
-		NoiseMap[] noises = new NoiseMap[]
-				{
-					new NoiseMap(size, size, 100, 100),
-					new NoiseMap(size, size, 101, 100),
-					new NoiseMap(size, size, 100, 101),
-					new NoiseMap(size, size, 101, 101)
-				};
+		NoiseMap[] noises = new NoiseMap[6*6];
+		for(int q=0; q < 6; ++q)
+		{
+			for(int w=0; w < 6; ++w)
+			{
+				noises[q*6+w] = new NoiseMap(size, size, 100+q, 100+w);
+			}
+		}
 		
 		for(int q=0; q < noises.length; ++q)
 			noises[q].filterNoise();
 		
-		HeightMap h = new HeightMap(size, size, noises[0], noises[1], noises[2], noises[3]);
+		HeightMap[] h = new HeightMap[5*5];
+		for(int q=0; q < 5; ++q)
+		{
+			for(int w=0; w < 5; ++w)
+			{
+				int off = q*6+w;
+				h[q*5+w] = new HeightMap(size, size, noises[off], noises[off+1], noises[off+7], noises[off+6]);
+				//h[q*5+w].saveImage(String.format("lol %d.png", q*5+w));
+			}
+		}
 		
 		sRend = new ShapeRenderer();
-		tField = new MarchedField(h);
+		tField = new MarchedField(h[0]);
 
 		System.out.printf("Starting meshification.\n");
 		
