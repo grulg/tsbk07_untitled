@@ -137,9 +137,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Emil's variables
 	 */
-	ShapeRenderer sRend;
-	Vector<TerrainChunk> chunks;
-	MarchedField tField;
+	private ShapeRenderer sRend;
+	private Vector<TerrainChunk> chunks;
+	private MarchedField tField;
+	private float editRadius = 5.0f;
 	
 	@Override
 	public void create() {
@@ -280,8 +281,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
 		
-		int size = 256;
-		
+		int size = 256;		
 		NoiseMap[] noises = new NoiseMap[]
 				{
 					new NoiseMap(size, size, 100, 100),
@@ -407,10 +407,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	private void emilDraw() 
 	{	
-		Vector3 tar = camera.position.cpy().mulAdd(camera.direction, 8);
+		Vector3 tar = camera.position.cpy().mulAdd(camera.direction, 5.0f+editRadius);
 		
 		//tField.activatePointsCloseTo(tar.x, tar.y, tar.z, 5);
-		tField.activatePointsInRadius(tar.x, tar.y, tar.z, 5.0f);
+		tField.activatePointsInRadius(tar.x, tar.y, tar.z, editRadius);
 		boolean meshesChanged = false;
 		//Update activated points, and the meshes derived from them.
 		if(buttons.get(Move_Buttons.SET_SOLID))
@@ -617,6 +617,16 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		}
 		if(keycode == Keys.NUM_2) {
 			buttons.get(buttons.put(Move_Buttons.SET_WATER, true));
+		}
+		if(keycode == Keys.PERIOD)
+		{
+			editRadius += 1.0f;
+		}
+		if(keycode == Keys.MINUS)
+		{
+			editRadius -= 1.0f;
+			if(editRadius < 1.0f)
+				editRadius = 1.0f;
 		}
 		
 		return false;
