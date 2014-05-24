@@ -280,18 +280,20 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
 		
+		int size = 256;
+		
 		NoiseMap[] noises = new NoiseMap[]
 				{
-					new NoiseMap(256, 256, 100, 100),
-					new NoiseMap(256, 256, 101, 100),
-					new NoiseMap(256, 256, 100, 101),
-					new NoiseMap(256, 256, 101, 101)
+					new NoiseMap(size, size, 100, 100),
+					new NoiseMap(size, size, 101, 100),
+					new NoiseMap(size, size, 100, 101),
+					new NoiseMap(size, size, 101, 101)
 				};
 		
 		for(int q=0; q < noises.length; ++q)
 			noises[q].filterNoise();
 		
-		HeightMap h = new HeightMap(256, 256, noises[0], noises[1], noises[2], noises[3]);
+		HeightMap h = new HeightMap(size, size, noises[0], noises[1], noises[2], noises[3]);
 		
 		sRend = new ShapeRenderer();
 		tField = new MarchedField(h);
@@ -463,12 +465,15 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		}
 		sRend.end();
 		
+		float[] lDir = {skydome.getSunPosition().x,
+				skydome.getSunPosition().y, skydome.getSunPosition().z};
+		
 		//TODO Frustrum culling.
-		TerrainChunk.beginGroundRender(camera.combined);
+		TerrainChunk.beginGroundRender(camera.combined, lDir);
 		for(int q=0; q < chunks.size(); ++q)
 			chunks.get(q).renderGround();
 		TerrainChunk.endGroundRender();
-		TerrainChunk.beginWaterRender(camera.combined, camera.view, normalMapTex, normalMapTex2, waterTex, 0.6f*time);
+		TerrainChunk.beginWaterRender(camera.combined, camera.view, lDir, normalMapTex, normalMapTex2, waterTex, 0.6f*time);
 		for(int q=0; q < chunks.size(); ++q)
 			chunks.get(q).renderWater();
 		TerrainChunk.endWaterRender();
