@@ -187,6 +187,6 @@ public class HeightMap
 	
 	private NoiseMap ul, ur, lr, ll;
 	private int width, height, rW, rH;
-	private final int smoothRegion = 8;
+	private final int smoothRegion = 18;
 	private float[][] heights;
 }

@@ -282,29 +282,27 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		
 		NoiseMap[] noises = new NoiseMap[]
 				{
-					new NoiseMap(128, 128, 100, 100),
-					new NoiseMap(128, 128, 101, 100),
-					new NoiseMap(128, 128, 100, 101),
-					new NoiseMap(128, 128, 101, 101)
+					new NoiseMap(256, 256, 100, 100),
+					new NoiseMap(256, 256, 101, 100),
+					new NoiseMap(256, 256, 100, 101),
+					new NoiseMap(256, 256, 101, 101)
 				};
 		
 		for(int q=0; q < noises.length; ++q)
 			noises[q].filterNoise();
 		
-		HeightMap h = new HeightMap(128, 128, noises[0], noises[1], noises[2], noises[3]);
-		
-		//h.saveImage("current.png");
+		HeightMap h = new HeightMap(256, 256, noises[0], noises[1], noises[2], noises[3]);
 		
 		sRend = new ShapeRenderer();
 		tField = new MarchedField(h);
-		//tField.setSolidNormals();
+
 		System.out.printf("Starting meshification.\n");
 		
-		for(int x=0; x < 16; ++x)
+		for(int x=0; x < 32; ++x)
 		{
 			for(int y=0; y < 16; ++y)
 			{
-				for(int z=0; z < 16; ++z)
+				for(int z=0; z < 32; ++z)
 				{
 					chunks.add(new TerrainChunk(tField, 8, 8*x, 8*y, 8*z));
 				}
