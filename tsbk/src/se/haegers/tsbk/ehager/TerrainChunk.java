@@ -85,12 +85,13 @@ public class TerrainChunk extends BoxShaped
 	{
 		terrainShader = new ShaderProgram(Gdx.files.internal(vec), Gdx.files.internal(frag));
 		Gdx.app.log("Terrain", terrainShader.isCompiled() ? "Terrain compiled successfully" : terrainShader.getLog());
-		terrainShader.setUniformi("tex", 0);
 	}
-	public static void beginGroundRender(Matrix4 projection)
+	public static void beginGroundRender(Matrix4 projection, float[] lDir)
 	{
 		groundTex.bind();
 		terrainShader.begin();
+		terrainShader.setUniform3fv("u_lDir", lDir, 0, 3);
+		terrainShader.setUniformi("tex", 0);
 		terrainShader.setUniformMatrix("u_projection", projection);
 	}
 	public static void endGroundRender()
@@ -102,7 +103,7 @@ public class TerrainChunk extends BoxShaped
 		waterShader = new ShaderProgram(Gdx.files.internal(vec), Gdx.files.internal(frag));
 		Gdx.app.log("Water", waterShader.isCompiled() ? "Water compiled successfully" : waterShader.getLog());
 	}
-	public static void beginWaterRender(Matrix4 projection, Matrix4 view, Texture normalMapTex, Texture normalMapTex2, Texture waterTex, float elapsedTime)
+	public static void beginWaterRender(Matrix4 projection, Matrix4 view, float[] lDir, Texture normalMapTex, Texture normalMapTex2, Texture waterTex, float elapsedTime)
 	{
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);

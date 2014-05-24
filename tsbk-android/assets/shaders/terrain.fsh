@@ -3,6 +3,7 @@ precision mediump float;
 #endif
 
 uniform sampler2D tex;
+uniform vec3 u_lDir;
 
 varying vec3 v_normal;
 varying vec3 w_pos;
@@ -11,7 +12,7 @@ varying vec3 v_texWeights;
 void main()
 {
 	vec3 lDir = vec3(1.0, 1.0, 1.0);
-	lDir = normalize(lDir);
+	lDir = normalize(u_lDir);
 	
 
 	vec4 xt = texture2D(tex, 0.2*w_pos.yz);

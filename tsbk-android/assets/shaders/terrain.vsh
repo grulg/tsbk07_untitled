@@ -3,6 +3,7 @@ attribute vec3 a_normal;
 
 uniform mat4 u_projection;
 
+
 varying vec3 v_normal;
 varying vec3 w_pos;
 varying vec3 v_texWeights;
