@@ -34,7 +34,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.spine.AnimationState;
 import com.esotericsoftware.spine.AnimationStateData;
@@ -43,7 +42,6 @@ import com.esotericsoftware.spine.Skeleton;
 import com.esotericsoftware.spine.SkeletonData;
 import com.esotericsoftware.spine.SkeletonJson;
 import com.esotericsoftware.spine.SkeletonRenderer;
-import com.esotericsoftware.spine.SkeletonRendererDebug;
 /**
  * Current controls:
  * Camera movement in X and Y directions: W,A,S,D
@@ -74,7 +72,6 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	private SpriteBatch batch;
 	private Texture texture;
 	private Sprite sprite;
-	private BitmapFont font;
 	private Mesh mesh;
 	
 	/*
@@ -225,7 +222,6 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		 * This font is used for simple debug display. The default BitmapFont-constructor
 		 * gives 15pt Arial, but it is possible to make your own.
 		 */
-		font = new BitmapFont();
 		
 		/*
 		 * Tell Lib GDX that this object shall be the object that handles input from mouse/keyboard
@@ -245,7 +241,6 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		/*
 		 * Spine 
 		 */
-		debugRenderer = new SkeletonRendererDebug();
     	skeletonRenderer = new SkeletonRenderer();
     	
 		atlas = new TextureAtlas(Gdx.files.internal("data/speedy.atlas"));
