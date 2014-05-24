@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class SunShader implements Shader {
@@ -50,7 +51,12 @@ public class SunShader implements Shader {
 		program.begin();
 		texture.bind(TEXTURE_UNIT);
 		program.setUniformi("u_texture", TEXTURE_UNIT);
-		program.setUniformMatrix("u_combinedMat", camera.combined);
+		Matrix4 tmp = camera.view.cpy();
+		tmp.val[12] = 0;
+		tmp.val[13] = 0;
+		tmp.val[14] = 0;
+		program.setUniformMatrix("u_viewMat", tmp);
+		program.setUniformMatrix("u_projectionMat", camera.projection);
 
 		
 //		context.setDepthTest(GL20.GL_LEQUAL);	// TODO Is this the right parameter?
