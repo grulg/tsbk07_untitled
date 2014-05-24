@@ -2,11 +2,6 @@
 precision mediump float;
 #endif
 
-attribute vec3 a_normal;
-attribute vec3 a_position;
-
-
-
 uniform sampler2D tex;
 
 varying vec3 v_normal;
