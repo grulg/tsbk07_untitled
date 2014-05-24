@@ -3,6 +3,9 @@ package se.haegers.tsbk.ehager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -82,9 +85,11 @@ public class TerrainChunk extends BoxShaped
 	{
 		terrainShader = new ShaderProgram(Gdx.files.internal(vec), Gdx.files.internal(frag));
 		Gdx.app.log("Terrain", terrainShader.isCompiled() ? "Terrain compiled successfully" : terrainShader.getLog());
+		terrainShader.setUniformi("tex", 0);
 	}
 	public static void beginGroundRender(Matrix4 projection)
 	{
+		groundTex.bind();
 		terrainShader.begin();
 		terrainShader.setUniformMatrix("u_projection", projection);
 	}
@@ -109,12 +114,20 @@ public class TerrainChunk extends BoxShaped
 		waterShader.end();
 	}
 	
+	public static void loadGroundTexture(String path)
+	{
+		groundTex = new Texture(Gdx.files.internal(path));
+		groundTex.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+		groundTex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+	}
+	
 	private Mesh groundMesh;
 	private Mesh waterMesh;
 	private MarchedField parent;
 	private int pointsPerSide;
 	private int xOff, yOff, zOff;
 	
+	private static Texture groundTex;
 	private static ShaderProgram terrainShader;
 	private static ShaderProgram waterShader;
 }
