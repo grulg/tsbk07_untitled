@@ -19,7 +19,7 @@ void main(void)
 	vec3 eyeVector = u_modelViewMat * a_position;
 
 	v_eyeVector = normalize(eyeVector);
-	v_lightDirection = normalize(u_lDir);
+	v_lightDirection = normalize(-u_lDir);
 
 	gl_Position = u_combinedMat * a_position;
 }

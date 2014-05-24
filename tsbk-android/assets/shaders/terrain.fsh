@@ -11,7 +11,7 @@ varying vec3 v_texWeights;
 
 void main()
 {
-	vec3 lDir = vec3(1.0, 1.0, 1.0);
+	vec3 lDir;
 	lDir = normalize(u_lDir);
 	
 

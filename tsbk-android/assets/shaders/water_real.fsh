@@ -5,6 +5,7 @@ precision mediump float;
 uniform sampler2D u_dudvTex;
 uniform sampler2D u_normalTex;
 uniform sampler2D u_waterTex;
+uniform vec3 u_lDir;
 
 uniform float time;
 
@@ -77,10 +78,10 @@ void main()
     }
     
     // Hard coded vertex normal, since all our water is completely horizontal.
-	vec3 vertexNormal = (0,1,0);
+	vec3 vertexNormal = vec3(0.0,1.0,0.0);
 	
     float NormalDotLight = max(dot(vertexNormal,v_lightDirection),0.0);
-    vec4 color = (0.1, 0.1, 0.1, 1.0); //TODO: Change to fit sun color later
+    vec4 color = vec4(0.1, 0.1, 0.1, 1.0); //TODO: Change to fit sun color later
     // If the Phong shading resulted in 0.0, don't bother processing it further
     if(NormalDotLight > 0.0)
     {
@@ -105,7 +106,11 @@ void main()
     
     vec3 texelLighted = mix(color.rgb,waterTexl.rgb,0.9995); // The blue is arbitrary
     
-	gl_FragColor = vec4(mix(texelLighted.rgb,bumpColor.rgb,0.10),0.8);
+    float mainDiffuse = max(dot(normalize(u_lDir), vertexNormal), 0.2);
+    
+	gl_FragColor = vec4(mainDiffuse*mix(texelLighted.rgb,bumpColor.rgb,0.10), 0.8);
+
+
 }
 
 
