@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -64,6 +65,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	 * Textures and dudv/normal-maps used for the water.
 	 */
 	private Texture waterTex;
+	private Texture normalMapTex;
+	private Texture normalMapTex2;
 	/*
 	 * Objects used for projection, drawing and getting text on the screen.
 	 */
@@ -126,7 +129,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	private Skeleton skeleton;
 	private AnimationState animationState;
 	private Bone root;
-	float time = 0;
+	private float time = 0;
 
 	/*
 	 * Haeger's variables
@@ -177,6 +180,16 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		texture = new Texture(Gdx.files.internal("data/libgdx.png"));
 		texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		texture.bind();
+		
+		/*
+		 * Textures used for the water
+		 */
+		waterTex = new Texture(Gdx.files.internal("data/watertexture.jpg"));
+		normalMapTex = new Texture(Gdx.files.internal("data/w_normalmap.jpg"));
+		normalMapTex2 = new Texture(Gdx.files.internal("data/w_normalmap_2.png"));
+		waterTex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+		normalMapTex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+		normalMapTex2.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
 		
 		TextureRegion region = new TextureRegion(texture, 0, 0, 512, 275);
 		
@@ -265,7 +278,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	{	
 		
 		TerrainChunk.setGroundShader("shaders/terrain.vsh", "shaders/terrain.fsh");
-		TerrainChunk.setWaterShader("shaders/water.vsh", "shaders/water.fsh");
+		TerrainChunk.setWaterShader("shaders/water_real.vsh", "shaders/water_real.fsh");
+		//TerrainChunk.setWaterShader("shaders/water.vsh", "shaders/water.fsh");
 		chunks = new Vector<TerrainChunk>();
 		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
@@ -360,16 +374,16 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		 * Finally, since the UI shall not be affected by position in the world, we simply cancel that out
 		 * (the code simply makes it so we draw the rest of the stuff on the near plane directly)
 		 */
-		Matrix4 uiMatrix = camera.combined.cpy();
-		uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		batch.setProjectionMatrix(uiMatrix);
-		
-		batch.begin();
-		// Cool function for multi-line text. Just use \n.
-		font.drawMultiLine(batch, "FPS: " + Gdx.graphics.getFramesPerSecond() + 
-				"\nCamera Position: " + (int) camera.position.x + ", " + (int) camera.position.y + ", " + (int) camera.position.z +
-				"\nCamera Up-Vector: " + camera.up + "\nCamera Direction: " + camera.direction, 10, Gdx.graphics.getHeight() - 10);
-		batch.end();
+//		Matrix4 uiMatrix = camera.combined.cpy();
+//		uiMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+//		batch.setProjectionMatrix(uiMatrix);
+//		
+//		batch.begin();
+//		// Cool function for multi-line text. Just use \n.
+//		font.drawMultiLine(batch, "FPS: " + Gdx.graphics.getFramesPerSecond() + 
+//				"\nCamera Position: " + (int) camera.position.x + ", " + (int) camera.position.y + ", " + (int) camera.position.z +
+//				"\nCamera Up-Vector: " + camera.up + "\nCamera Direction: " + camera.direction, 10, Gdx.graphics.getHeight() - 10);
+//		batch.end();
 
 	}
 	
@@ -453,7 +467,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		for(int q=0; q < chunks.size(); ++q)
 			chunks.get(q).renderGround();
 		TerrainChunk.endGroundRender();
-		TerrainChunk.beginWaterRender(camera.combined);
+		TerrainChunk.beginWaterRender(camera.combined, camera.view, waterTex, normalMapTex, normalMapTex2, time);
 		for(int q=0; q < chunks.size(); ++q)
 			chunks.get(q).renderWater();
 		TerrainChunk.endWaterRender();

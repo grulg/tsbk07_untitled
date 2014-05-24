@@ -19,5 +19,5 @@ void main(void)
 	v_eyeVector = normalize(eyeVector);
 	v_lightDirection = lightSourcePos - eyeVector;
 
-	gl_Position = u_combinedMat * u_rotationMat * a_position;
+	gl_Position = u_combinedMat * a_position;
 }

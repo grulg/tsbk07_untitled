@@ -3,6 +3,7 @@ package se.haegers.tsbk.ehager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -97,12 +98,37 @@ public class TerrainChunk extends BoxShaped
 		waterShader = new ShaderProgram(Gdx.files.internal(vec), Gdx.files.internal(frag));
 		Gdx.app.log("Water", waterShader.isCompiled() ? "Water compiled successfully" : waterShader.getLog());
 	}
-	public static void beginWaterRender(Matrix4 projection)
+	public static void beginWaterRender(Matrix4 projection, Matrix4 view, Texture normalMapTex, Texture normalMapTex2, Texture waterTex, float elapsedTime)
 	{
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		waterShader.begin();
-		waterShader.setUniformMatrix("u_projection", projection);
+		//waterShader.setUniformMatrix("u_projection", projection);
+		
+		normalMapTex.bind(2);
+		normalMapTex2.bind(3);
+		waterTex.bind(4);
+		
+		waterShader.setUniformMatrix("u_combinedMat", projection);//cameraController.getCamera().combined);
+		waterShader.setUniformMatrix("u_modelViewMat", view);
+		waterShader.setUniformi("u_dudvTex", 2);
+		waterShader.setUniformi("u_normalTex", 3);
+		waterShader.setUniformi("u_waterTex", 4);
+		waterShader.setUniformf("time", elapsedTime);
+		
+//		dudvMapTex.bind(1);
+		//normalMapTex.bind(2);
+	//	normalMapTex2.bind(3);
+	//	waterTex.bind(4);
+//		
+		//waterProgram.setUniformMatrix("u_combinedMat", cameraController.getCamera().combined);//cameraController.getCamera().combined);
+//		waterProgram.setUniformMatrix("u_modelViewMat", cameraController.getCamera().view);
+//		waterProgram.setUniformi("u_dudvTex", 3);
+//		waterProgram.setUniformi("u_normalTex", 2);
+//		waterProgram.setUniformi("u_waterTex", 4);
+//		waterProgram.setUniformf("time", elapsedTime);
+//		waterMesh.render(waterProgram, GL20.GL_TRIANGLE_FAN);
+		
 	}
 	public static void endWaterRender()
 	{
