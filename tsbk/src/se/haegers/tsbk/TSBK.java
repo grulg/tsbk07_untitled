@@ -103,7 +103,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		SIM_INC,
 		SIM_DEC,
 		SET_SOLID,
-		SET_AIR
+		SET_AIR,
+		SET_WATER
 	}
 	
 	static Map<Move_Buttons, Boolean> buttons = new HashMap<Move_Buttons, Boolean>();
@@ -118,6 +119,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		buttons.put(Move_Buttons.SIM_DEC, false);
 		buttons.put(Move_Buttons.SET_SOLID, false);
 		buttons.put(Move_Buttons.SET_AIR, false);
+		buttons.put(Move_Buttons.SET_WATER, false);
 	}; 
 	
 	/*
@@ -278,8 +280,13 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	{	
 		
 		TerrainChunk.setGroundShader("shaders/terrain.vsh", "shaders/terrain.fsh");
+//<<<<<<< HEAD
 		TerrainChunk.setWaterShader("shaders/water_real.vsh", "shaders/water_real.fsh");
 		//TerrainChunk.setWaterShader("shaders/water.vsh", "shaders/water.fsh");
+//=======
+//		TerrainChunk.setWaterShader("shaders/water.vsh", "shaders/water.fsh");
+//		TerrainChunk.loadGroundTexture("data/Grass_3.png");
+//>>>>>>> ee07e7c966237e435f9f4623308afa753af8ec2b
 		chunks = new Vector<TerrainChunk>();
 		//sTest = new ShaderProgram(Gdx.files.internal("shaders/terrain.vsh"), Gdx.files.internal("shaders/terrain.fsh"));
 		//Gdx.app.log("sTest", sTest.isCompiled() ? "sTest compiled successfully" : sTest.getLog());
@@ -316,8 +323,8 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		}
 		for(int q=0; q < chunks.size(); ++q)
 		{
-			chunks.get(q).refreshSolidMesh();
 			chunks.get(q).refreshWaterMesh();
+			chunks.get(q).refreshSolidMesh();
 		}
 		
 		System.out.printf("Meshification complete.\n");
@@ -411,9 +418,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 
 	private void emilDraw() 
 	{	
-		Vector3 tar = camera.position.cpy().mulAdd(camera.direction, 2);
+		Vector3 tar = camera.position.cpy().mulAdd(camera.direction, 8);
 		
-		tField.activatePointsCloseTo(tar.x, tar.y-1.0f, tar.z, 2);
+		//tField.activatePointsCloseTo(tar.x, tar.y, tar.z, 5);
+		tField.activatePointsInRadius(tar.x, tar.y, tar.z, 5.0f);
 		boolean meshesChanged = false;
 		//Update activated points, and the meshes derived from them.
 		if(buttons.get(Move_Buttons.SET_SOLID))
@@ -424,6 +432,11 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if(buttons.get(Move_Buttons.SET_AIR))
 		{
 			tField.setActivePointsProperty(0);
+			meshesChanged = true;
+		}
+		if(buttons.get(Move_Buttons.SET_WATER))
+		{
+			tField.setActivePointsProperty(2);
 			meshesChanged = true;
 		}
 		
@@ -443,6 +456,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		
 		//Actual drawing happens down here.
 		sRend.setProjectionMatrix(camera.combined);
+		
 		sRend.begin(ShapeType.Point);
 		TerrainPoint[] ts = tField.getActivePoints();
 		for(int q=0; q < ts.length; ++q)
@@ -479,6 +493,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
     	 * When we want to move right we simply cross the up- and direction-vector of the frustum
     	 * and normalize it, and than scale it with the camera movement speed. Simple.
     	 */
+    	
+    	Vector3 tmp = new Vector3(camera.position.x, camera.position.y, camera.position.z);
+    	
     	if (buttons.get(Move_Buttons.CAM_LEFT)) {
     		camera.translate(camera.up.cpy().crs(camera.direction).nor().scl(CAMERA_MOVEMENT_SPEED));
 			camera.update();
@@ -498,6 +515,7 @@ public class TSBK implements ApplicationListener, InputProcessor {
 			camera.translate(camera.up.cpy().nor().scl(-CAMERA_MOVEMENT_SPEED));
 			camera.update();
 		}
+
 		if (buttons.get(Move_Buttons.CAM_FORWARD)) {
 			camera.translate(camera.direction.cpy().nor().scl(ZOOM_SPEED));
 			camera.update();
@@ -512,6 +530,16 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if (buttons.get(Move_Buttons.SIM_DEC)) {
 			skydome.setSimulationSpeed(skydome.getSimulationSpeed() - 0.1f);
 		}
+		
+		if(tField.pointState(camera.position.x, camera.position.y, camera.position.z) >= 0.4 && 
+			tField.pointState(camera.position.x, camera.position.y, camera.position.z) < 1.0)
+		{
+			camera.position.x = tmp.x;
+			camera.position.y = tmp.y;
+			camera.position.z = tmp.z;
+			camera.update();
+		}
+		
 		if(leftPressed) {
 			int x = Gdx.input.getX();
 			int y = Gdx.input.getY();
@@ -595,6 +623,10 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		if(keycode == Keys.NUM_0) {
 			buttons.get(buttons.put(Move_Buttons.SET_AIR, true));
 		}
+		if(keycode == Keys.NUM_2) {
+			buttons.get(buttons.put(Move_Buttons.SET_WATER, true));
+		}
+		
 		return false;
 	}
 
@@ -629,6 +661,9 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		}
 		if(keycode == Keys.NUM_0) {
 			buttons.get(buttons.put(Move_Buttons.SET_AIR, false));
+		}
+		if(keycode == Keys.NUM_2) {
+			buttons.get(buttons.put(Move_Buttons.SET_WATER, false));
 		}
 		return false;
 	}
@@ -670,8 +705,19 @@ public class TSBK implements ApplicationListener, InputProcessor {
 		/*
 		 * Moving forward simply means following the direction vector with a predetermined scale.
 		 */
+
+    	Vector3 tmp = new Vector3(camera.position.x, camera.position.y, camera.position.z);
 		camera.translate(camera.direction.cpy().nor().scl(-amount * ZOOM_SPEED));
 		camera.update();
+		
+		if(tField.pointState(camera.position.x, camera.position.y, camera.position.z) >= 0.4 && 
+				tField.pointState(camera.position.x, camera.position.y, camera.position.z) < 1.0)
+			{
+				camera.position.x = tmp.x;
+				camera.position.y = tmp.y;
+				camera.position.z = tmp.z;
+				camera.update();
+			}
 		return false;
 	}
 }

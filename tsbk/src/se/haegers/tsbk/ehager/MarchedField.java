@@ -118,14 +118,106 @@ public class MarchedField
 		}
 	}
 	
-	/*
-	public Mesh getSolidMesh()
+	public float pointState(float x, float y, float z)
 	{
-		setSolidNormals();
-		makeSolidEdges(1,10,1,10,1,10);
-		return getCurrentMesh();
+		float ret = 0;
+		
+		float xD, yD, zD;
+		xD = x/spacing;
+		yD = y/spacing;
+		zD = z/spacing;
+		int sX, sY, sZ;
+		sX = (int) Math.floor(xD);
+		sY = (int) Math.floor(yD);
+		sZ = (int) Math.floor(zD);
+		float fracX = xD-sX;
+		float fracY = yD-sY;
+		float fracZ = zD-sZ;
+		
+		if(sX < 0 || sX >= dimX-1)
+			return 0.0f;
+		if(sY < 0 || sY >= dimY-1)
+			return 0.0f;
+		if(sZ < 0 || sZ >= dimZ-1)
+			return 0.0f;
+		
+		float xyz = (float)field[sX][sY][sZ].getProperty();
+		float x1yz = (float)field[sX+1][sY][sZ].getProperty();
+		float xy1z = (float)field[sX][sY+1][sZ].getProperty();
+		float xyz1 = (float)field[sX][sY][sZ+1].getProperty();
+		float xy1z1 = (float)field[sX][sY+1][sZ+1].getProperty();
+		float x1yz1 = (float)field[sX+1][sY][sZ+1].getProperty();
+		float x1y1z = (float)field[sX+1][sY+1][sZ].getProperty();
+		float x1y1z1 = (float)field[sX+1][sY+1][sZ+1].getProperty();
+		
+		float x1 = xyz + (x1yz-xyz)*fracX;
+		float x2 = xy1z + (x1y1z-xy1z)*fracX;
+		float x3 = xyz1 + (x1yz1-xyz1)*fracX;
+		float x4 = xy1z1 + (x1y1z1-xy1z1)*fracX;
+		
+		float y1 = x1+(x2-x1)*fracY;	
+		float y2 = x3+(x4-x3)*fracY;
+		
+		ret = y1+(y2-y1)*fracZ;
+		
+		return ret;
 	}
-	*/
+	
+	public void activatePointsInRadius(float x, float y, float z, float r)
+	{
+		float xD, yD, zD;
+		xD = x/spacing;
+		yD = y/spacing;
+		zD = z/spacing;
+		int n = (int) Math.floor(2*r+0.5);
+		
+		int iX, iY, iZ, sX, sY, sZ;
+		sX = (int) Math.floor(xD+0.5f);
+		sY = (int) Math.floor(yD+0.5f);
+		sZ = (int) Math.floor(zD+0.5f);
+
+		sX -= n/2;
+		sY -= n/2;
+		sZ -= n/2;
+		float rs = r*r;
+		
+		activeVerts = new Vector<TerrainPoint>();
+		
+		iX = sX;
+		float curX, curY, curZ;
+		float xDi, yDi, zDi;
+		for(int q=0; q < n; ++q)
+		{
+			if(iX >= dimX || iX < 0)
+			{ continue; }
+			iY = sY;
+			for(int w=0; w < n; ++w)
+			{
+				if(iY >= dimY || iY < 0)
+				{ continue; }
+				iZ = sZ;
+				for(int e=0; e < n; ++e)
+				{
+					if(iZ >= dimZ || iZ < 0)
+					{ continue; }
+					
+					curX = iX*spacing;
+					curY = iY*spacing;
+					curZ = iZ*spacing;
+					
+					xDi = curX-xD;
+					yDi = curY-yD;
+					zDi = curZ-zD;
+					
+					if((xDi*xDi+yDi*yDi+zDi*zDi) <= rs)
+						activeVerts.add(field[iX][iY][iZ]);
+					++iZ;
+				}
+				++iY;
+			}
+			++iX;
+		}
+	}
 	
 	public void activatePointsCloseTo(float x, float y, float z, int n)
 	{
@@ -138,6 +230,10 @@ public class MarchedField
 		sX = (int) Math.floor(xD+0.5f);
 		sY = (int) Math.floor(yD+0.5f);
 		sZ = (int) Math.floor(zD+0.5f);
+		
+		sX -= n/2;
+		sY -= n/2;
+		sZ -= n/2;
 		
 		activeVerts = new Vector<TerrainPoint>();
 		
