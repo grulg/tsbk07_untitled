@@ -125,7 +125,6 @@ public class TSBK implements ApplicationListener, InputProcessor {
 	/*
 	 * Tholin's variables
 	 */
-	private SkeletonRendererDebug debugRenderer;
 	private SkeletonRenderer skeletonRenderer;
 	private TextureAtlas atlas;
 	private Skeleton skeleton;
